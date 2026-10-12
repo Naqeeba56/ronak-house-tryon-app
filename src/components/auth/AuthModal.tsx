@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -30,13 +31,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setLoading(false);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-      <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-slate-950/80 p-3 backdrop-blur-md sm:p-6">
+      <div role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" className="relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-6">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+          aria-label="Close sign-in dialog"
+          className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
         >
           <X className="w-5 h-5" />
         </button>
@@ -46,7 +48,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <div className="inline-flex p-3 rounded-xl bg-indigo-600/20 text-indigo-400 mb-3">
             <Sparkles className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold text-white">Welcome to FabricFit AI</h2>
+          <h2 id="auth-modal-title" className="text-xl font-bold text-white">Welcome to FabricFit AI</h2>
           <p className="text-xs text-slate-400 mt-1">Sign in or create your account securely with Google.</p>
         </div>
 
@@ -59,7 +61,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         <button
           onClick={handleGoogleAuth}
           disabled={loading}
-          className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 font-medium text-xs text-slate-200 flex items-center justify-center gap-3 transition-colors mb-4"
+          className="mb-4 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-xs font-medium text-slate-200 transition-colors hover:border-slate-600 hover:bg-slate-700"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
@@ -83,6 +85,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         </button>
         <p className="mt-4 text-center text-[11px] leading-5 text-slate-500">Google manages your sign-in securely. No passwords or email forms are stored by FabricFit AI.</p>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

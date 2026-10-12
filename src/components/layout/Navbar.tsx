@@ -45,11 +45,11 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 bg-slate-950/90 px-3 pt-3 text-slate-200 backdrop-blur-xl sm:px-6">
-      <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-3 rounded-full border border-slate-800 bg-slate-900/95 px-3 shadow-lg shadow-slate-950/5 sm:min-h-16 sm:px-5">
-        <Link href="/" className="flex shrink-0 items-center gap-2 rounded-full text-base font-bold tracking-tight text-white sm:text-lg">
+    <header className="sticky top-0 z-40 bg-slate-950/90 px-2 pt-2 text-slate-200 backdrop-blur-xl sm:px-6 sm:pt-3">
+      <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-2 rounded-full border border-slate-800 bg-slate-900/95 px-2.5 shadow-lg shadow-slate-950/5 sm:min-h-16 sm:gap-3 sm:px-5">
+        <Link href="/" className="flex min-w-0 shrink items-center gap-1.5 rounded-full text-sm font-bold tracking-tight text-white sm:gap-2 sm:text-lg">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/15"><Sparkles className="h-4 w-4 text-indigo-400" /></span>
-          <span>FabricFit<span className="text-indigo-400"> AI</span></span>
+          <span className="truncate">FabricFit<span className="text-indigo-400"> AI</span></span>
         </Link>
 
         <nav aria-label="Main navigation" className="hidden items-center gap-1 rounded-full bg-slate-950/60 p-1 text-sm font-medium md:flex">
@@ -70,13 +70,13 @@ export default function Navbar() {
               {avatarUrl ? <Image src={avatarUrl} alt="" width={40} height={40} unoptimized className="h-full w-full object-cover" /> : <User className="h-4 w-4" />}
             </Link>
           ) : (
-            <button onClick={() => setIsAuthOpen(true)} className="min-h-10 rounded-full bg-indigo-600 px-4 text-xs font-semibold text-white transition hover:bg-indigo-500">
+            <button onClick={() => setIsAuthOpen(true)} className="min-h-10 rounded-full bg-indigo-600 px-3 text-xs font-semibold text-white transition hover:bg-indigo-500 sm:px-4">
               Sign in
             </button>
           )}
         </div>
       </div>
-      <nav aria-label="Mobile navigation" className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-2 py-2 text-xs font-medium md:hidden">
+      <nav aria-label="Mobile navigation" className="mx-auto flex max-w-7xl gap-1.5 overflow-x-auto px-1 py-1.5 text-xs font-medium md:hidden">
         <NavLink href="/studio" active={pathname.startsWith("/studio") || pathname.startsWith("/result")}>Studio</NavLink>
         {isAuthenticated && <NavLink href="/library" active={pathname.startsWith("/library")}>Library</NavLink>}
         <NavLink href="/pricing" active={pathname.startsWith("/pricing")}>Pricing</NavLink>
@@ -89,7 +89,7 @@ export default function Navbar() {
 function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
   const pendingLabel = href === "/studio" ? "Opening Studio..." : href === "/library" ? "Opening Library..." : "Loading plans...";
   return (
-    <Link href={href} prefetch={false} aria-current={active ? "page" : undefined} className={`whitespace-nowrap rounded-full px-3 py-2 transition-colors ${active ? "bg-slate-800 text-white" : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"}`}>
+    <Link href={href} prefetch={false} aria-current={active ? "page" : undefined} className={`inline-flex min-h-10 items-center whitespace-nowrap rounded-full px-3 transition-colors ${active ? "bg-slate-800 text-white" : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"}`}>
       <NavLinkLabel pendingLabel={pendingLabel}>{children}</NavLinkLabel>
     </Link>
   );

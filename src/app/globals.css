@@ -127,6 +127,22 @@
   html {
     @apply font-sans;
   }
+  body {
+    -webkit-tap-highlight-color: transparent;
+  }
+  :where(a, button, [role="button"], input, select, textarea):focus-visible {
+    outline: 2px solid var(--color-indigo-400);
+    outline-offset: 3px;
+  }
+  :where(button, [role="button"]) {
+    touch-action: manipulation;
+  }
+  @media (hover: none) and (pointer: coarse) {
+    :where(button:not(:disabled), [role="button"], a[class*="rounded"]):active {
+      transform: scale(0.98);
+      transition-duration: 100ms;
+    }
+  }
 }
 
 html[data-theme="light"] {
@@ -217,6 +233,14 @@ html[data-theme="light"] .media-overlay [class*="bg-slate-950/"] {
   background-image: linear-gradient(to top, rgb(11 18 32 / 90%) 0%, rgb(11 18 32 / 38%) 42%, rgb(11 18 32 / 8%) 100%);
 }
 
+.style-explorer-outfits {
+  scrollbar-width: none;
+}
+
+.style-explorer-outfits::-webkit-scrollbar {
+  display: none;
+}
+
 html[data-theme="dark"] body {
   background-color: #0b1220;
   color: #eff4fa;
@@ -229,5 +253,22 @@ html[data-theme="dark"] body {
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .mobile-compact {
+    padding-inline: 0.875rem;
   }
 }

@@ -2,66 +2,52 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, LoaderCircle, Trash2 } from "lucide-react";
-import { clearLatestGeneratedImage } from "@/lib/generated-image-storage";
+import { Download, Trash2 } from "lucide-react";
 
 export function ResultActions({ generationId }: { generationId: string }) {
   const router = useRouter();
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const leaveResult = async () => {
-    try {
-      await clearLatestGeneratedImage();
-    } catch {
-      setError("Could not reset the Studio preview. Your saved Library image is safe.");
-      return;
-    }
-    router.push("/studio");
-  };
-
-  const downloadImage = async () => {
-    setIsDownloading(true);
+  const deleteImage = async () => {
+    setIsDeleting(true);
     setError(null);
     try {
-      const response = await fetch(`/api/tryons/${encodeURIComponent(generationId)}/download`);
-      if (!response.ok) throw new Error("Could not download this try-on.");
-      const imageBlob = await response.blob();
-      const objectUrl = URL.createObjectURL(imageBlob);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = `fabricfit-try-on-${generationId}.png`;
-      link.click();
-      URL.revokeObjectURL(objectUrl);
-      await leaveResult();
-    } catch (downloadError) {
-      setError(downloadError instanceof Error ? downloadError.message : "Could not download this try-on.");
-      setIsDownloading(false);
+      const response = await fetch(`/api/tryons/${encodeURIComponent(generationId)}`, { method: "DELETE" });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? "Could not delete this try-on.");
+      router.replace("/library");
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Could not delete this try-on.");
+      setIsDeleting(false);
     }
   };
 
   return (
-    <div className="mt-4">
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => void downloadImage()}
-          disabled={isDownloading}
-          className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
-        >
-          {isDownloading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-          Download
-        </button>
-        <button
-          type="button"
-          onClick={() => void leaveResult()}
-          disabled={isDownloading}
-          className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-rose-400/50 px-4 py-3 text-sm font-semibold text-rose-300 hover:bg-rose-400/10 disabled:opacity-60"
-        >
-          <Trash2 className="h-4 w-4" /> Delete
+    <>
+      <div className="absolute right-3 top-3 z-10 flex gap-2">
+        <a href={`/api/tryons/${encodeURIComponent(generationId)}/download`} aria-label="Download try-on" className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-slate-950/75 text-white backdrop-blur transition hover:bg-indigo-600">
+          <Download className="h-4 w-4" />
+        </a>
+        <button type="button" onClick={() => setIsConfirmingDelete(true)} aria-label="Delete try-on" className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-slate-950/75 text-white backdrop-blur transition hover:bg-rose-600">
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
-      {error && <p role="alert" className="mt-3 text-center text-sm text-rose-300">{error}</p>}
-    </div>
+      {error && <p role="alert" className="absolute bottom-3 left-3 right-3 z-10 rounded-lg bg-slate-950/90 p-3 text-sm text-rose-300">{error}</p>}
+      {isConfirmingDelete && (
+        <div role="presentation" className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
+          <section role="alertdialog" aria-modal="true" aria-labelledby="result-delete-title" className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl sm:p-6">
+            <h2 id="result-delete-title" className="text-lg font-semibold text-white">Delete this try-on?</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-400">This removes the saved image from your Library and cannot be undone.</p>
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+              <button type="button" onClick={() => setIsConfirmingDelete(false)} disabled={isDeleting} className="min-h-11 rounded-full border border-slate-700 px-4 text-sm font-semibold text-slate-300 hover:text-white disabled:opacity-50">Cancel</button>
+              <button type="button" onClick={() => void deleteImage()} disabled={isDeleting} className="min-h-11 rounded-full bg-rose-600 px-4 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-50">{isDeleting ? "Deleting…" : "Delete image"}</button>
+            </div>
+            {error && <p role="alert" className="mt-3 text-sm text-rose-300">{error}</p>}
+          </section>
+        </div>
+      )}
+    </>
   );
 }

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import GeneratingIndicator from "@/components/studio/GeneratingIndicator";
-import { OUTFIT_PRESETS_BY_GENDER, TRY_ON_MODEL_PRESETS } from "@/lib/constants";
+import { GARMENT_PRESETS, TRY_ON_MODEL_PRESETS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import {
   ImagePlus,
@@ -18,6 +18,7 @@ import {
 const AuthModal = dynamic(() => import("@/components/auth/AuthModal"), { loading: () => null });
 
 type UploadedImage = { name: string; dataUrl: string };
+type TryOnRegion = (typeof GARMENT_PRESETS)[number]["region"];
 type GenerateResponse = {
   outputUrl?: string;
   generationId?: string;
@@ -61,21 +62,67 @@ async function fetchPresetImage(imageUrl: string) {
   return readImage(image);
 }
 
-function getOutfitSymbol(label: string) {
-  const symbols: Record<string, string> = {
-    Shirt: "👔",
-    Trousers: "👖",
-    Blazer: "🧥",
-    "3-Piece Suit": "🤵",
-    "Nehru Jacket": "🧥",
-    "Indo-Western": "🥻",
-    Sherwani: "🥻",
-    Kurta: "👕",
-    "Salwar Suit": "👗",
-    Saree: "🥻",
-    Lehenga: "👗",
+async function createTryOnMask(region: TryOnRegion, modelImageUrl: string) {
+  const modelImageElement = new window.Image();
+  modelImageElement.src = modelImageUrl;
+  await new Promise<void>((resolve, reject) => {
+    modelImageElement.onload = () => resolve();
+    modelImageElement.onerror = () => reject(new Error("Could not prepare an edit mask for this model photo."));
+  });
+  const canvas = document.createElement("canvas");
+  canvas.width = modelImageElement.naturalWidth;
+  canvas.height = modelImageElement.naturalHeight;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Could not prepare the selected outfit area.");
+
+  context.scale(canvas.width / 512, canvas.height / 768);
+  context.fillStyle = "#000";
+  context.fillRect(0, 0, 512, 768);
+  context.fillStyle = "#fff";
+  context.filter = `blur(${Math.max(5, canvas.height * 0.008)}px)`;
+
+  const drawUpperBody = (hemY: number) => {
+    context.beginPath();
+    context.moveTo(154, 196);
+    context.quadraticCurveTo(256, 238, 358, 196);
+    context.lineTo(405, 258);
+    context.quadraticCurveTo(390, 320, 377, hemY - 30);
+    context.quadraticCurveTo(256, hemY, 135, hemY - 30);
+    context.lineTo(107, 320);
+    context.lineTo(107, 258);
+    context.closePath();
+    context.fill();
   };
-  return symbols[label] ?? "👕";
+
+  const drawLowerBody = (waistY: number, hemY: number) => {
+    context.beginPath();
+    context.moveTo(150, waistY);
+    context.quadraticCurveTo(256, waistY - 12, 362, waistY);
+    context.quadraticCurveTo(390, waistY + 44, 372, waistY + 92);
+    context.lineTo(358, hemY);
+    context.lineTo(270, hemY);
+    context.lineTo(264, waistY + 142);
+    context.lineTo(248, hemY);
+    context.lineTo(154, hemY);
+    context.lineTo(140, waistY + 92);
+    context.quadraticCurveTo(122, waistY + 44, 150, waistY);
+    context.closePath();
+    context.fill();
+  };
+
+  if (region === "upper") {
+    drawUpperBody(424);
+  } else if (region === "long-upper") {
+    drawUpperBody(530);
+  } else if (region === "lower") {
+    drawLowerBody(420, 742);
+  } else {
+    drawUpperBody(424);
+    drawLowerBody(420, 742);
+  }
+  context.filter = "none";
+
+  return canvas.toDataURL("image/png");
 }
 
 function PhotoUploadCard({
@@ -127,7 +174,7 @@ export default function StudioPage() {
   const [packRemaining, setPackRemaining] = useState<number | null>(null);
   const [isBalanceReady, setIsBalanceReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const outfitPresets = OUTFIT_PRESETS_BY_GENDER[selectedGender];
+  const outfitPresets = GARMENT_PRESETS;
   const selectedPreset = outfitPresets.find(({ label }) => label === garmentType) ?? outfitPresets[0];
   const selectedModelPreset =
     TRY_ON_MODEL_PRESETS.find(({ id }) => id === selectedModelPresetId) ?? null;
@@ -220,15 +267,19 @@ export default function StudioPage() {
       const presetImage = presetImageUrl
         ? await fetchPresetImage(presetImageUrl)
         : undefined;
+      const modelImageDataUrl = modelImage?.dataUrl ?? presetImage;
+      if (!modelImageDataUrl) throw new Error("Choose a model photo before generating your try-on.");
+      const maskImage = await createTryOnMask(selectedPreset.region, modelImageDataUrl);
       const startResponse = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           garmentType: selectedPreset.label,
-          modelImage: modelImage?.dataUrl ?? presetImage,
+          modelImage: modelImageDataUrl,
           modelPresetId: modelImage ? undefined : selectedModelPreset?.id,
           modelGender: selectedGender,
           garmentImage: garmentImage.dataUrl,
+          maskImage,
         }),
       });
       const generated = (await startResponse.json()) as GenerateResponse;
@@ -252,13 +303,13 @@ export default function StudioPage() {
 
   return (
     <div className="min-h-[calc(100vh-7rem)] bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-        <header className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+      <div className="mobile-compact mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
+        <header className="mb-6 flex flex-col justify-between gap-4 sm:mb-8 sm:flex-row sm:items-end">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-300">
               <Sparkles className="h-3.5 w-3.5" /> Virtual fitting room
             </p>
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Make the look yours.</h1>
+            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:mt-4 sm:text-4xl">Make the look yours.</h1>
             <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">Add your photo and an outfit. We’ll create a private try-on preview just for you.</p>
           </div>
           <Link href="/library" className="inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-full border border-slate-800 bg-slate-900 px-4 text-sm font-medium text-slate-300 transition hover:border-indigo-400/50 hover:text-white sm:self-auto">
@@ -267,10 +318,10 @@ export default function StudioPage() {
         </header>
 
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)]">
-          <div className="space-y-5">
-            <section className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 sm:p-7">
+          <div className="space-y-4 sm:space-y-5">
+            <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 sm:rounded-3xl sm:p-7">
               <StepHeading number="01" title="Start with two photos" subtitle="A clear, full-body photo works best." />
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-2">
                 <PhotoUploadCard
                   title="Your photo"
                   image={modelImage}
@@ -291,7 +342,7 @@ export default function StudioPage() {
               <p className="mt-3 flex items-center gap-2 text-xs text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Your photos are only used to create your try-on.</p>
             </section>
 
-            <section className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 sm:p-7">
+            <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 sm:rounded-3xl sm:p-7">
               <StepHeading number="02" title="Choose who’s trying it on" subtitle="We’ll show outfit ideas for your category." />
               <div className="mt-5 grid grid-cols-2 gap-2 rounded-2xl bg-slate-950 p-1.5">
                 {TRY_ON_MODEL_PRESETS.map((model) => (
@@ -303,7 +354,6 @@ export default function StudioPage() {
                       setSelectedGender(model.gender);
                       setSelectedModelPresetId(model.id);
                       setModelImage(null);
-                      setGarmentType(model.gender === "male" ? "Shirt" : "Salwar Suit");
                       setError(null);
                     }}
                     className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition ${selectedGender === model.gender ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-200"}`}
@@ -315,19 +365,21 @@ export default function StudioPage() {
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 sm:p-7">
+            <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 sm:rounded-3xl sm:p-7">
               <StepHeading number="03" title="Pick the outfit type" subtitle="We’ll tailor the try-on to the garment you upload." />
               <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                {outfitPresets.map(({ label }) => (
+                {outfitPresets.map(({ label, thumbnails }) => (
                   <button
                     key={label}
                     type="button"
                     aria-pressed={garmentType === label}
                     onClick={() => setGarmentType(label)}
-                    className={`group flex min-h-20 items-center gap-3 rounded-2xl border px-3 py-3 text-left transition hover:-translate-y-0.5 ${garmentType === label ? "border-indigo-400/70 bg-indigo-500/10 text-white shadow-lg shadow-indigo-950/20" : "border-slate-800 bg-slate-950/50 text-slate-300 hover:border-slate-700"}`}
+                    className={`group flex min-h-18 items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition hover:-translate-y-0.5 active:scale-[0.99] sm:min-h-20 sm:gap-3 sm:rounded-2xl sm:px-3 sm:py-3 ${garmentType === label ? "border-indigo-400/70 bg-indigo-500/10 text-white shadow-lg shadow-indigo-950/20" : "border-slate-800 bg-slate-950/50 text-slate-300 hover:border-slate-700"}`}
                   >
-                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl ${garmentType === label ? "bg-indigo-500/15" : "bg-slate-900"}`} aria-hidden="true">{getOutfitSymbol(label)}</span>
-                    <span className="text-sm font-semibold">{label}</span>
+                    <span className="relative h-14 w-11 shrink-0 overflow-hidden rounded-lg bg-slate-900" aria-hidden="true">
+                      <Image src={thumbnails[selectedGender]} alt="" fill className="object-cover object-top transition duration-300 group-hover:scale-105" sizes="44px" />
+                    </span>
+                    <span className="text-xs font-semibold leading-4 sm:text-sm">{label}</span>
                   </button>
                 ))}
               </div>
@@ -335,7 +387,7 @@ export default function StudioPage() {
           </div>
 
           <aside className="lg:sticky lg:top-28">
-            <section className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-xl shadow-slate-950/10">
+            <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-xl shadow-slate-950/10 sm:rounded-3xl">
               <div className="flex items-center justify-between px-5 py-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-300">Your setup</p>
@@ -358,10 +410,9 @@ export default function StudioPage() {
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-indigo-200">Selected outfit</p>
                     <p className="mt-1 text-xl font-semibold text-white">{garmentType}</p>
                   </div>
-                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-slate-950/40 text-2xl text-white backdrop-blur">{getOutfitSymbol(garmentType)}</span>
                 </div>
               </div>
-              <div className="space-y-4 p-5">
+              <div className="space-y-3 p-4 sm:space-y-4 sm:p-5">
                 <p className="text-sm leading-6 text-slate-400">{selectedPreset.description}</p>
                 <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
                   <span className="text-xs text-slate-400">Try-ons available</span>

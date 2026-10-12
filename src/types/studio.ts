@@ -1,4 +1,16 @@
-export type OutfitCategory = 'kurta' | 'pathani' | 'shirt' | 'pants' | 'blazer';
+export type OutfitCategory =
+  | "Shirt"
+  | "Pant"
+  | "Indo-Western Jacket"
+  | "2-Piece Suit"
+  | "3-Piece Suit"
+  | "Blazer"
+  | "Nehru Jacket"
+  | "Indo Western"
+  | "Sherwani"
+  | "Kurta"
+  | "Patahni"
+  | "Jothpuri suit";
 
 export interface BaseModel {
   id: string;

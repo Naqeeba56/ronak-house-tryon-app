@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { APP_ADMIN_EMAIL, GARMENT_PRESETS, TRY_ON_MODEL_PRESETS } from "@/lib/constants";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { createTryOnImageUrl, storeGeneratedTryOn } from "@/lib/supabase/try-on-images";
+import { createTryOnImageUrl, storeMaskedTryOn } from "@/lib/supabase/try-on-images";
 
 const MAX_IMAGE_DATA_URL_LENGTH = 4_000_000;
 const IMAGE_MODEL = "google/gemini-3.1-flash-lite-image";
@@ -12,6 +12,7 @@ type GenerateRequest = {
   garmentType?: string;
   garmentImage?: string;
   modelImage?: string;
+  maskImage?: string;
   modelPresetId?: string;
   modelGender?: "male" | "female";
 };
@@ -134,8 +135,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Choose a valid model category." }, { status: 400 });
   }
   const selectedGender = modelPreset?.gender ?? body.modelGender;
-  if (!selectedGender || garmentPreset.gender !== selectedGender) {
-    return NextResponse.json({ error: "Choose an outfit from the selected category." }, { status: 400 });
+  if (!selectedGender) {
+    return NextResponse.json({ error: "Choose a male or female model category." }, { status: 400 });
   }
 
   let modelImage: string;
@@ -150,6 +151,9 @@ export async function POST(request: Request) {
 
   if (!isImageDataUrl(body.garmentImage) || body.garmentImage.length > MAX_IMAGE_DATA_URL_LENGTH) {
     return NextResponse.json({ error: "Upload a PNG, JPG, or WebP garment image under 3 MB." }, { status: 400 });
+  }
+  if (!isImageDataUrl(body.maskImage) || body.maskImage.length > MAX_IMAGE_DATA_URL_LENGTH) {
+    return NextResponse.json({ error: "Could not prepare a valid outfit edit mask. Please try again." }, { status: 400 });
   }
 
   let reservation: TryOnReservation | null = null;
@@ -173,19 +177,40 @@ export async function POST(request: Request) {
   let storagePath: string | null = null;
   let generationId: string | null = null;
   try {
+    const genderedGarment = {
+      Shirt: selectedGender === "male" ? "men's tailored collared shirt" : "women's tailored shirt or blouse",
+      Pant: selectedGender === "male" ? "men's full-length tailored trousers" : "women's full-length tailored trousers",
+      "Indo-Western Jacket": `${selectedGender === "male" ? "men's" : "women's"} tailored Indo-Western jacket`,
+      "2-Piece Suit": `${selectedGender === "male" ? "men's" : "women's"} coordinated two-piece suit`,
+      "3-Piece Suit": `${selectedGender === "male" ? "men's" : "women's"} coordinated three-piece suit`,
+      Blazer: `${selectedGender === "male" ? "men's" : "women's"} structured tailored blazer`,
+      "Nehru Jacket": `${selectedGender === "male" ? "men's" : "women's"} sleeveless, high-collar Nehru jacket`,
+      "Indo Western": `${selectedGender === "male" ? "men's" : "women's"} coordinated Indo-Western outfit`,
+      Sherwani: `${selectedGender === "male" ? "men's" : "women's"} formal knee-length sherwani`,
+      Kurta: `${selectedGender === "male" ? "men's" : "women's"} straight-cut, knee-length kurta`,
+      Patahni: `${selectedGender === "male" ? "men's" : "women's"} Pathani kurta and matching trousers`,
+      "Jothpuri suit": `${selectedGender === "male" ? "men's" : "women's"} Jodhpuri bandhgala jacket and matching trousers`,
+    }[garmentPreset.label];
     const imagePrompt = [
-      "You are an expert fashion virtual try-on image editor. Edit the first reference image; do not create a different person or an unrelated outfit.",
-      `Image 1 is ${modelPreset ? `a ${modelPreset.gender} model` : "the selected model"}. Preserve the model's identity, face, hair, body shape, pose, camera angle, lighting, and background.`,
-      `The requested outfit is ${garmentPreset.description}. Make sure the output clearly shows the model wearing this exact garment type, replacing the original target clothing if necessary.`,
-      `Image 2 is the reference garment. Dress the customer in ${garmentPreset.description}, using the garment photo as the source for its design, fabric, print, embroidery, colors, and details.`,
-      `Adapt the reference garment naturally to ${garmentPreset.fabricTarget}, preserving its construction, cut, seams, fit, and folds while respecting the customer's pose and body proportions.`,
-      "Do not change the customer's identity, skin, hair, or background. Do not add text, borders, or a collage. Produce one clear, high-quality, photorealistic full-body try-on image.",
+      "You are an expert fashion inpainting editor. Image 1 is the immutable source photograph and final canvas. Do not recreate, replace, reframe, or restyle the person or scene.",
+      `Preserve the exact ${selectedGender} model's identity, face, hair, body shape, pose, camera angle, lighting, and every background detail from image 1.`,
+      `The requested garment is ${genderedGarment}. Image 2 is the garment reference; use its design, fabric, print, embroidery, colors, and details to dress the model in a realistic ${genderedGarment}. Treat image 2 as a garment reference, not as another person or a scene to reproduce.`,
+      `Image 3 is an edit mask aligned pixel-for-pixel with image 1: white pixels mark the only editable pixels and black pixels are protected and must remain identical to image 1. Edit only the ${garmentPreset.region} clothing region indicated by the mask, applying the reference garment to ${garmentPreset.fabricTarget}. If a pixel is outside the selected garment or the mask is unclear, leave it unchanged.`,
+      `Keep every non-selected garment unchanged, including lower-body clothing when the selected item is an upper-body garment, and upper-body clothing when the selected item is pants. Preserve seams, fit, folds, and body proportions.`,
+      ...(garmentPreset.label === "Pant"
+        ? ["Replace both visible trouser legs completely from the waistband or the point where they emerge from an overlapping jacket down to both hems. Follow the model's actual leg pose and keep the two legs distinct; do not leave strips or panels of the original trousers. Do not alter the shirt, jacket, hands, shoes, skin, or background."]
+        : []),
+      ...(garmentPreset.region === "long-upper"
+        ? ["The selected garment is knee-length: extend its hem naturally to the knees while preserving the existing trousers and shoes below it."]
+        : []),
+      "Do not change any unmasked pixels, the customer's identity, skin, hair, pose, camera angle, lighting, or background. Do not add text, borders, or a collage. Return one photorealistic image with the original framing and aspect ratio.",
     ].join(" ");
     const content: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }> = [
       { type: "text", text: imagePrompt },
     ];
     content.push({ type: "image_url", image_url: { url: modelImage } });
     content.push({ type: "image_url", image_url: { url: body.garmentImage } });
+    content.push({ type: "image_url", image_url: { url: body.maskImage } });
 
     const aicreditsResponse = await fetch(`${AICREDITS_BASE_URL}/chat/completions`, {
       method: "POST",
@@ -221,7 +246,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "The selected AICredits model did not return an image." }, { status: 502 });
     }
 
-    const stored = await storeGeneratedTryOn(sessionClient, user.id, outputUrl);
+    const stored = await storeMaskedTryOn(sessionClient, user.id, outputUrl, {
+      sourceImageDataUrl: modelImage,
+      maskImageDataUrl: body.maskImage,
+    });
     storagePath = stored.storagePath;
 
     const { data: generation, error: insertError } = await sessionClient
