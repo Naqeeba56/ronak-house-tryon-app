@@ -48,7 +48,7 @@ export default function LibraryGallery({ images: initialImages }: { images: Libr
               <div className="media-overlay relative aspect-[4/4.5] overflow-hidden bg-slate-950">
                 {image.imageUrl ? (
                   <button type="button" onClick={() => setPreview(image)} aria-label={`View ${image.garment_type} try-on full screen`} className="absolute inset-0 h-full w-full cursor-zoom-in">
-                    <Image src={image.imageUrl} alt={`${image.garment_type} try-on`} fill unoptimized className="object-contain transition duration-500 group-hover:scale-[1.02]" />
+                    <Image src={image.imageUrl} alt={`${image.garment_type} try-on`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-contain transition duration-500 group-hover:scale-[1.02]" />
                   </button>
                 ) : (
                   <div className="flex h-full items-center justify-center text-slate-600"><ImageIcon className="h-8 w-8" /></div>
@@ -87,7 +87,7 @@ export default function LibraryGallery({ images: initialImages }: { images: Libr
       {preview?.imageUrl && (
         <div role="dialog" aria-modal="true" aria-label={`${preview.garment_type} try-on`} onClick={() => setPreview(null)} className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4 backdrop-blur-sm">
           <button type="button" onClick={() => setPreview(null)} aria-label="Close full-screen image" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-slate-900 text-white"><X className="h-5 w-5" /></button>
-          <Image src={preview.imageUrl} alt={`${preview.garment_type} try-on full screen`} fill unoptimized onClick={(event) => event.stopPropagation()} className="cursor-zoom-out object-contain p-4 sm:p-10" />
+          <Image src={preview.imageUrl} alt={`${preview.garment_type} try-on full screen`} fill sizes="100vw" onClick={(event) => event.stopPropagation()} className="cursor-zoom-out object-contain p-4 sm:p-10" />
         </div>
       )}
 

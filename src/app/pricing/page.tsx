@@ -2,6 +2,19 @@ import { Check, ShieldCheck, Sparkles } from "lucide-react";
 import TryOnPackPurchaseButton from "@/components/billing/TryOnPackPurchaseButton";
 import { TRYON_PLANS, type TryOnPlanId } from "@/lib/constants";
 import Footer from "@/components/layout/Footer";
+import type { Metadata } from "next";
+import { siteUrl } from "@/lib/site-url";
+
+export const metadata: Metadata = {
+  title: "Try-On Plans & Pricing",
+  description: "Compare Ronak House TryON plans and choose the right number of private AI outfit generations for your style.",
+  alternates: { canonical: new URL("/pricing", siteUrl).toString() },
+  openGraph: {
+    title: "Try-On Plans & Pricing",
+    description: "Compare Ronak House TryON plans and choose the right number of private AI outfit generations for your style.",
+    url: new URL("/pricing", siteUrl).toString(),
+  },
+};
 
 const PLAN_DETAILS: Record<TryOnPlanId, { description: string; buttonLabel: string }> = {
 	starter: { description: "10 images · valid 30 days", buttonLabel: "Choose plan" },

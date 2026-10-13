@@ -1,32 +1,32 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Syne } from "next/font/google";
 import Navbar from "@/components/layout/Navbar";
 import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-const siteName = "FabricFit AI";
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const syne = Syne({ subsets: ["latin"], variable: "--font-syne" });
+const siteName = "Ronak House TryON";
 const siteDescription =
-  "Preview outfits on a full-body model or your own photo with private, AI-powered virtual try-ons.";
+  "Create private AI-powered virtual try-on previews with your photo, fabric image, and styles including Indian ethnic wear.";
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
   title: {
-    default: "FabricFit AI | AI Virtual Try-On for Outfits",
-    template: "%s | FabricFit AI",
+    default: "Ronak House TryON | Virtual Fitting Room",
+    template: "%s | Ronak House TryON",
   },
   description: siteDescription,
   applicationName: siteName,
   keywords: [
     "AI virtual try-on",
     "virtual fitting room",
-    "try on clothes online",
-    "outfit preview",
-    "Indian ethnic wear",
+    "online clothes try-on",
+    "virtual outfit preview",
+    "Indian saree try-on",
+    "lehenga virtual try-on",
+    "kurta try-on",
   ],
-  alternates: {
-    canonical: "/",
-  },
   robots: {
     index: true,
     follow: true,
@@ -42,14 +42,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName,
-    title: "FabricFit AI | AI Virtual Try-On for Outfits",
+    title: "Ronak House TryON | Virtual Fitting Room",
     description: siteDescription,
-    url: "/",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "FabricFit AI virtual fitting room" }],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Ronak House TryON virtual fitting room" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "FabricFit AI | AI Virtual Try-On for Outfits",
+    title: "Ronak House TryON | Virtual Fitting Room",
     description: siteDescription,
     images: ["/opengraph-image"],
   },
@@ -62,7 +61,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" data-theme="dark">
-      <body className={`${inter.className} min-h-screen bg-slate-950 text-slate-100`}>
+      <body className={`${inter.variable} ${syne.variable} min-h-screen bg-slate-950 font-sans text-slate-100`}>
         <Navbar />
         <main>{children}</main>
       </body>

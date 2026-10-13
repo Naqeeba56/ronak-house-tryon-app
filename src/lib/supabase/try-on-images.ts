@@ -70,18 +70,18 @@ export async function storeMaskedTryOn(
 
   const imageBytes = await sharp(generatedPixels, {
     raw: { width, height, channels: 4 },
-  }).png().toBuffer();
+  }).webp({ quality: 90, effort: 4 }).toBuffer();
   if (imageBytes.length > MAX_IMAGE_BYTES) throw new Error("The generated image is too large to save.");
 
-  const storagePath = `${userId}/${randomUUID()}.png`;
+  const storagePath = `${userId}/${randomUUID()}.webp`;
   const { error } = await admin.storage.from(BUCKET).upload(storagePath, imageBytes, {
-    contentType: "image/png",
+    contentType: "image/webp",
     cacheControl: "3600",
     upsert: false,
   });
   if (error) throw error;
 
-  return { storagePath, contentType: "image/png" };
+  return { storagePath, contentType: "image/webp" };
 }
 
 async function loadImageBytes(imageUrl: string) {

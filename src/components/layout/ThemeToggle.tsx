@@ -33,7 +33,7 @@ export default function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
       title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 text-slate-200 transition-colors hover:border-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300 active:scale-95"
+      className="vton-header-icon-button flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 text-slate-200 transition-colors hover:border-[#7e22ce] hover:bg-[#7e22ce] hover:text-white active:scale-95"
     >
       {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>

@@ -9,8 +9,8 @@ export type OutfitCategory =
   | "Indo Western"
   | "Sherwani"
   | "Kurta"
-  | "Patahni"
-  | "Jothpuri suit";
+  | "Pathani"
+  | "Jodhpuri suit";
 
 export interface BaseModel {
   id: string;

@@ -25,7 +25,16 @@ export const TRY_ON_MODEL_PRESETS: BaseModel[] = [
   },
 ];
 
-export const GARMENT_PRESETS = [
+type GarmentPresetDefinition = {
+  label: string;
+  description: string;
+  fabricTarget: string;
+  region: "upper" | "lower" | "long-upper" | "full";
+  gender?: "male" | "female";
+  thumbnails?: Partial<Record<"male" | "female", string>>;
+};
+
+export const GARMENT_PRESETS: readonly GarmentPresetDefinition[] = [
   {
     label: "Shirt",
     description: "a tailored collared shirt",
@@ -94,21 +103,46 @@ export const GARMENT_PRESETS = [
     description: "a traditional straight-cut, knee-length kurta",
     fabricTarget: "the kurta body and sleeves",
     region: "long-upper",
-    thumbnails: { male: "/outfit-presets/male-indo-western.webp", female: "/outfit-presets/female-kurta.webp" },
+    gender: "male",
+    thumbnails: { male: "/outfit-presets/male-kurta.webp" },
   },
   {
-    label: "Patahni",
+    label: "Pathani",
     description: "a traditional Pathani kurta with matching full-length trousers",
     fabricTarget: "the Pathani kurta and both matching trouser legs",
     region: "full",
     thumbnails: { male: "/outfit-presets/male-pathani.webp", female: "/outfit-presets/female-pathani.webp" },
   },
   {
-    label: "Jothpuri suit",
+    label: "Jodhpuri suit",
     description: "a tailored Jodhpuri bandhgala jacket with matching trousers",
     fabricTarget: "the Jodhpuri jacket and both matching trouser legs",
     region: "full",
     thumbnails: { male: "/outfit-presets/male-jodhpuri.webp", female: "/outfit-presets/female-jodhpuri.webp" },
+  },
+  {
+    label: "Saree",
+    description: "a traditional saree with a fitted blouse",
+    fabricTarget: "the saree and blouse",
+    region: "full",
+    gender: "female",
+    thumbnails: { female: "/outfit-presets/female-saree.webp" },
+  },
+  {
+    label: "Lehenga",
+    description: "a flared lehenga skirt with choli and dupatta",
+    fabricTarget: "the lehenga skirt, choli, and dupatta",
+    region: "full",
+    gender: "female",
+    thumbnails: { female: "/outfit-presets/female-nehru-jacket.webp" },
+  },
+  {
+    label: "Kurta",
+    description: "a straight-fit kurta with coordinated bottoms",
+    fabricTarget: "the kurta and coordinated bottoms",
+    region: "full",
+    gender: "female",
+    thumbnails: { female: "/outfit-presets/female-kurta.webp" },
   },
 ] as const;
 

@@ -1,12 +1,32 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { NextResponse } from "next/server";
+import sharp from "sharp";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { APP_ADMIN_EMAIL, GARMENT_PRESETS, TRY_ON_MODEL_PRESETS } from "@/lib/constants";
+import { buildTryOnPrompt, OUTFITS, type OutfitKey } from "@/lib/outfit-prompts";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createTryOnImageUrl, storeMaskedTryOn } from "@/lib/supabase/try-on-images";
 
 const MAX_IMAGE_DATA_URL_LENGTH = 4_000_000;
-const IMAGE_MODEL = "google/gemini-3.1-flash-lite-image";
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const AICREDITS_BASE_URL = (process.env.AICREDITS_BASE_URL || "https://api.aicredits.in/v1").replace(/\/+$/, "");
+const OUTFIT_KEYS_BY_CATEGORY: Record<string, OutfitKey> = {
+  Shirt: "male-shirt",
+  Pant: "male-pant",
+  "Indo-Western Jacket": "male-indo-western-jacket",
+  "2-Piece Suit": "male-two-piece-suit",
+  "3-Piece Suit": "male-three-piece-suit",
+  Blazer: "male-blazer",
+  "Nehru Jacket": "male-nehru-jacket",
+  "Indo Western": "male-indo-western",
+  Sherwani: "male-sherwani",
+  Kurta: "male-kurta",
+  Pathani: "male-pathani",
+  "Jodhpuri suit": "male-jodhpuri-suit",
+  Saree: "female-saree",
+  Lehenga: "female-lehenga",
+};
 
 type GenerateRequest = {
   garmentType?: string;
@@ -19,7 +39,6 @@ type GenerateRequest = {
 
 type ImagePart = {
   type?: string;
-  text?: string;
   data?: string;
   url?: string;
   mime_type?: string;
@@ -44,8 +63,43 @@ type TryOnReservation = {
   pack_remaining: number;
 };
 
-function isImageDataUrl(value: unknown): value is string {
-  return typeof value === "string" && /^data:image\/(png|jpeg|jpg|webp);base64,[a-z0-9+/=]+$/i.test(value);
+type ValidatedImage = { bytes: Buffer; mimeType: "image/png" | "image/jpeg" | "image/webp" };
+
+async function validateImageDataUrl(value: unknown): Promise<ValidatedImage | undefined> {
+  if (typeof value !== "string" || value.length > MAX_IMAGE_DATA_URL_LENGTH) return undefined;
+  const match = value.match(/^data:(image\/(?:png|jpeg|jpg|webp));base64,([a-z0-9+/]+={0,2})$/i);
+  if (!match) return undefined;
+
+  const bytes = Buffer.from(match[2], "base64");
+  if (!bytes.length || bytes.length > MAX_IMAGE_BYTES || bytes.toString("base64") !== match[2]) return undefined;
+
+  const inputMimeType = match[1].toLowerCase();
+  const mimeType = inputMimeType === "image/jpg" ? "image/jpeg" : inputMimeType as ValidatedImage["mimeType"];
+  try {
+    const metadata = await sharp(bytes).metadata();
+    const expectedFormat = mimeType === "image/jpeg" ? "jpeg" : mimeType.slice("image/".length);
+    if (metadata.format !== expectedFormat) return undefined;
+  } catch {
+    return undefined;
+  }
+
+  return { bytes, mimeType };
+}
+
+async function loadStyleReference(presetPath: string) {
+  const presetBytes = await readFile(join(process.cwd(), "public", presetPath.slice(1)));
+  if (!presetBytes.length || presetBytes.length > MAX_IMAGE_BYTES) {
+    throw new Error("The selected outfit style reference is too large.");
+  }
+  const metadata = await sharp(presetBytes).metadata();
+  if (!metadata.format || !["jpeg", "png", "webp"].includes(metadata.format)) {
+    throw new Error("The selected outfit style reference is not a supported image.");
+  }
+  const jpegBytes = await sharp(presetBytes).greyscale().jpeg().toBuffer();
+  if (!jpegBytes.length || jpegBytes.length > MAX_IMAGE_BYTES) {
+    throw new Error("The selected outfit style reference is too large.");
+  }
+  return `data:image/jpeg;base64,${jpegBytes.toString("base64")}`;
 }
 
 function getImageUrl(message: ChatMessage) {
@@ -65,24 +119,6 @@ function getImageUrl(message: ChatMessage) {
       }
     }
   }
-
-  if (typeof message.content === "string") {
-    const dataUrl = message.content.match(/data:image\/(?:png|jpeg|jpg|webp);base64,[a-z0-9+/=]+/i)?.[0];
-    if (dataUrl) return dataUrl;
-
-    const markdownUrl = message.content.match(/!\[[^\]]*\]\((https:\/\/[^)\s]+)\)/i)?.[1];
-    if (markdownUrl) return markdownUrl;
-
-    const value = message.content.trim();
-    try {
-      if (new URL(value).protocol === "https:") return value;
-    } catch {
-      if (/^[a-z0-9+/]+={0,2}$/i.test(value) && value.length % 4 === 0) {
-        return `data:image/png;base64,${value}`;
-      }
-    }
-  }
-
   return undefined;
 }
 
@@ -114,17 +150,19 @@ export async function POST(request: Request) {
       { status: 503 },
     );
   }
+  const imageModel = process.env.GEMINI_IMAGE_MODEL?.trim();
+  if (!imageModel) {
+    return NextResponse.json(
+      { error: "Image generation is not configured. Add GEMINI_IMAGE_MODEL to your local environment." },
+      { status: 503 },
+    );
+  }
 
   let body: GenerateRequest;
   try {
     body = (await request.json()) as GenerateRequest;
   } catch {
     return NextResponse.json({ error: "The generation request was not valid JSON." }, { status: 400 });
-  }
-
-  const garmentPreset = GARMENT_PRESETS.find(({ label }) => label === body.garmentType);
-  if (!garmentPreset) {
-    return NextResponse.json({ error: "Choose a valid garment type." }, { status: 400 });
   }
 
   const modelPreset = TRY_ON_MODEL_PRESETS.find(({ id }) => id === body.modelPresetId);
@@ -138,22 +176,45 @@ export async function POST(request: Request) {
   if (!selectedGender) {
     return NextResponse.json({ error: "Choose a male or female model category." }, { status: 400 });
   }
+  const garmentPreset = GARMENT_PRESETS.find(
+    ({ label, gender }) => label === body.garmentType && (gender ?? "male") === selectedGender,
+  );
+  if (!garmentPreset) {
+    return NextResponse.json({ error: "Choose a valid outfit for the selected model category." }, { status: 400 });
+  }
+  const outfitKey = body.garmentType === "Kurta" && selectedGender === "female"
+    ? "female-kurta"
+    : body.garmentType ? OUTFIT_KEYS_BY_CATEGORY[body.garmentType] : undefined;
+  if (!outfitKey || OUTFITS[outfitKey].gender !== selectedGender) {
+    return NextResponse.json({ error: "Choose a valid outfit for the selected model category." }, { status: 400 });
+  }
+  const outfit = OUTFITS[outfitKey];
 
-  let modelImage: string;
-  if (body.modelImage) {
-    if (!isImageDataUrl(body.modelImage) || body.modelImage.length > MAX_IMAGE_DATA_URL_LENGTH) {
-      return NextResponse.json({ error: "Upload a PNG, JPG, or WebP model image under 3 MB." }, { status: 400 });
-    }
-    modelImage = body.modelImage;
-  } else {
+  if (!body.modelImage) {
     return NextResponse.json({ error: "Choose a male or female model preset, or upload a model image." }, { status: 400 });
   }
 
-  if (!isImageDataUrl(body.garmentImage) || body.garmentImage.length > MAX_IMAGE_DATA_URL_LENGTH) {
-    return NextResponse.json({ error: "Upload a PNG, JPG, or WebP garment image under 3 MB." }, { status: 400 });
+  const [modelImage, fabricImage, editMask] = await Promise.all([
+    validateImageDataUrl(body.modelImage),
+    validateImageDataUrl(body.garmentImage),
+    validateImageDataUrl(body.maskImage),
+  ]);
+  if (!modelImage) {
+    return NextResponse.json({ error: "Upload a valid PNG, JPG, or WebP model image under 3 MB." }, { status: 400 });
   }
-  if (!isImageDataUrl(body.maskImage) || body.maskImage.length > MAX_IMAGE_DATA_URL_LENGTH) {
+  if (!fabricImage) {
+    return NextResponse.json({ error: "Upload a valid PNG, JPG, or WebP garment image under 3 MB." }, { status: 400 });
+  }
+  if (!editMask || editMask.mimeType !== "image/png") {
     return NextResponse.json({ error: "Could not prepare a valid outfit edit mask. Please try again." }, { status: 400 });
+  }
+  const maskImageDataUrl = `data:${editMask.mimeType};base64,${editMask.bytes.toString("base64")}`;
+
+  let styleReference: string;
+  try {
+    styleReference = await loadStyleReference(outfit.preset);
+  } catch {
+    return NextResponse.json({ error: "The selected outfit style reference is unavailable. Please try again later." }, { status: 503 });
   }
 
   let reservation: TryOnReservation | null = null;
@@ -177,78 +238,50 @@ export async function POST(request: Request) {
   let storagePath: string | null = null;
   let generationId: string | null = null;
   try {
-    const genderedGarment = {
-      Shirt: selectedGender === "male" ? "men's tailored collared shirt" : "women's tailored shirt or blouse",
-      Pant: selectedGender === "male" ? "men's full-length tailored trousers" : "women's full-length tailored trousers",
-      "Indo-Western Jacket": `${selectedGender === "male" ? "men's" : "women's"} tailored Indo-Western jacket`,
-      "2-Piece Suit": `${selectedGender === "male" ? "men's" : "women's"} coordinated two-piece suit`,
-      "3-Piece Suit": `${selectedGender === "male" ? "men's" : "women's"} coordinated three-piece suit`,
-      Blazer: `${selectedGender === "male" ? "men's" : "women's"} structured tailored blazer`,
-      "Nehru Jacket": `${selectedGender === "male" ? "men's" : "women's"} sleeveless, high-collar Nehru jacket`,
-      "Indo Western": `${selectedGender === "male" ? "men's" : "women's"} coordinated Indo-Western outfit`,
-      Sherwani: `${selectedGender === "male" ? "men's" : "women's"} formal knee-length sherwani`,
-      Kurta: `${selectedGender === "male" ? "men's" : "women's"} straight-cut, knee-length kurta`,
-      Patahni: `${selectedGender === "male" ? "men's" : "women's"} Pathani kurta and matching trousers`,
-      "Jothpuri suit": `${selectedGender === "male" ? "men's" : "women's"} Jodhpuri bandhgala jacket and matching trousers`,
-    }[garmentPreset.label];
-    const imagePrompt = [
-      "You are an expert fashion inpainting editor. Image 1 is the immutable source photograph and final canvas. Do not recreate, replace, reframe, or restyle the person or scene.",
-      `Preserve the exact ${selectedGender} model's identity, face, hair, body shape, pose, camera angle, lighting, and every background detail from image 1.`,
-      `The requested garment is ${genderedGarment}. Image 2 is the garment reference; use its design, fabric, print, embroidery, colors, and details to dress the model in a realistic ${genderedGarment}. Treat image 2 as a garment reference, not as another person or a scene to reproduce.`,
-      `Image 3 is an edit mask aligned pixel-for-pixel with image 1: white pixels mark the only editable pixels and black pixels are protected and must remain identical to image 1. Edit only the ${garmentPreset.region} clothing region indicated by the mask, applying the reference garment to ${garmentPreset.fabricTarget}. If a pixel is outside the selected garment or the mask is unclear, leave it unchanged.`,
-      `Keep every non-selected garment unchanged, including lower-body clothing when the selected item is an upper-body garment, and upper-body clothing when the selected item is pants. Preserve seams, fit, folds, and body proportions.`,
-      ...(garmentPreset.label === "Pant"
-        ? ["Replace both visible trouser legs completely from the waistband or the point where they emerge from an overlapping jacket down to both hems. Follow the model's actual leg pose and keep the two legs distinct; do not leave strips or panels of the original trousers. Do not alter the shirt, jacket, hands, shoes, skin, or background."]
-        : []),
-      ...(garmentPreset.region === "long-upper"
-        ? ["The selected garment is knee-length: extend its hem naturally to the knees while preserving the existing trousers and shoes below it."]
-        : []),
-      "Do not change any unmasked pixels, the customer's identity, skin, hair, pose, camera angle, lighting, or background. Do not add text, borders, or a collage. Return one photorealistic image with the original framing and aspect ratio.",
-    ].join(" ");
     const content: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }> = [
-      { type: "text", text: imagePrompt },
+      { type: "text", text: "Image 1 (PERSON):" },
+      { type: "image_url", image_url: { url: `data:${modelImage.mimeType};base64,${modelImage.bytes.toString("base64")}` } },
+      { type: "text", text: "Image 2 (FABRIC):" },
+      { type: "image_url", image_url: { url: `data:${fabricImage.mimeType};base64,${fabricImage.bytes.toString("base64")}` } },
+      { type: "text", text: "Image 3 (STYLE REFERENCE):" },
+      { type: "image_url", image_url: { url: styleReference } },
+      { type: "text", text: buildTryOnPrompt(outfitKey) },
     ];
-    content.push({ type: "image_url", image_url: { url: modelImage } });
-    content.push({ type: "image_url", image_url: { url: body.garmentImage } });
-    content.push({ type: "image_url", image_url: { url: body.maskImage } });
-
-    const aicreditsResponse = await fetch(`${AICREDITS_BASE_URL}/chat/completions`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: IMAGE_MODEL,
-        messages: [{ role: "user", content }],
-      }),
-    });
-
-    const result = (await aicreditsResponse.json()) as ChatCompletionResponse;
-    if (!aicreditsResponse.ok) {
-      const providerError = typeof result.error === "string" ? result.error : result.error?.message;
-      const refunded = !reservation || await refundTryOnReservation(sessionClient, user.id, reservation.reservation_id);
-      if (!refunded) {
-        return NextResponse.json({ error: "Generation failed and its credit could not be restored. Contact support before retrying." }, { status: 503 });
+    let outputUrl: string | undefined;
+    let providerFailed = false;
+    for (let attempt = 0; attempt < 2 && !outputUrl; attempt += 1) {
+      const aicreditsResponse = await fetch(`${AICREDITS_BASE_URL}/chat/completions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: imageModel,
+          messages: [{ role: "user", content }],
+        }),
+      });
+      if (!aicreditsResponse.ok) {
+        providerFailed = true;
+        break;
       }
-      return NextResponse.json(
-        { error: providerError ?? "AICredits could not generate the try-on." },
-        { status: aicreditsResponse.status },
-      );
+      const result = (await aicreditsResponse.json()) as ChatCompletionResponse;
+      outputUrl = getImageUrl(result.choices?.[0]?.message);
     }
-
-    const outputUrl = getImageUrl(result.choices?.[0]?.message);
     if (!outputUrl) {
       const refunded = !reservation || await refundTryOnReservation(sessionClient, user.id, reservation.reservation_id);
       if (!refunded) {
         return NextResponse.json({ error: "Generation failed and its credit could not be restored. Contact support before retrying." }, { status: 503 });
       }
-      return NextResponse.json({ error: "The selected AICredits model did not return an image." }, { status: 502 });
+      return NextResponse.json(
+        { error: providerFailed ? "Image generation is temporarily unavailable. Please try again." : "The try-on could not be generated. Please try again." },
+        { status: 502 },
+      );
     }
 
     const stored = await storeMaskedTryOn(sessionClient, user.id, outputUrl, {
-      sourceImageDataUrl: modelImage,
-      maskImageDataUrl: body.maskImage,
+      sourceImageDataUrl: `data:${modelImage.mimeType};base64,${modelImage.bytes.toString("base64")}`,
+      maskImageDataUrl,
     });
     storagePath = stored.storagePath;
 

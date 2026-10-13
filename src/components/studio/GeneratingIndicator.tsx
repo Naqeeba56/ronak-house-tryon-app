@@ -14,7 +14,7 @@ export default function GeneratingIndicator() {
       animate={{ opacity: 1, y: 0 }}
       exit={reduceMotion ? undefined : { opacity: 0, y: -4 }}
       transition={{ duration: reduceMotion ? 0 : 0.2 }}
-      className="flex items-center gap-4 rounded-2xl border border-indigo-400/20 bg-indigo-500/[0.07] p-4"
+      className="vton-generating flex items-center gap-4 rounded-2xl p-4"
     >
       <div className="relative flex h-12 w-12 shrink-0 items-center justify-center">
         <motion.span

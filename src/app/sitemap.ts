@@ -9,11 +9,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: new URL("/studio", siteUrl).toString(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
       url: new URL("/pricing", siteUrl).toString(),
       changeFrequency: "monthly",
       priority: 0.7,

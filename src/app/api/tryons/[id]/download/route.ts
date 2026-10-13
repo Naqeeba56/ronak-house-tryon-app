@@ -33,7 +33,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   return new Response(image, {
     headers: {
       "Content-Type": image.type || "image/png",
-      "Content-Disposition": `attachment; filename="fabricfit-${generation.garment_type.toLowerCase()}-${id}.${extension}"`,
+      "Content-Disposition": `attachment; filename="ronak-house-${generation.garment_type.toLowerCase()}-${id}.${extension}"`,
       "Cache-Control": "private, no-store",
     },
   });

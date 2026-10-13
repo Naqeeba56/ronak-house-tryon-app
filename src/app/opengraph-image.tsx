@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "FabricFit AI — preview outfits before you buy";
+export const alt = "Ronak House TryON — preview outfits before you buy";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -36,7 +36,7 @@ export default function OpenGraphImage() {
           >
             F
           </div>
-          <span style={{ fontSize: "26px", fontWeight: 700 }}>FabricFit AI</span>
+          <span style={{ fontSize: "26px", fontWeight: 700 }}>Ronak House TryON</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
           <div

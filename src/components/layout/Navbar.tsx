@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useLinkStatus } from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Sparkles, User } from "lucide-react";
+import { LoaderCircle, Sparkles, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { APP_ADMIN_EMAIL } from "@/lib/constants";
 import AuthModal from "@/components/auth/AuthModal";
@@ -18,6 +17,14 @@ export default function Navbar() {
   const [tryOnBalance, setTryOnBalance] = useState<number | "unlimited" | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [userName, setUserName] = useState("Open profile");
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pendingNavigation) return;
+    const delay = pendingNavigation === pathname ? 0 : 15_000;
+    const timer = window.setTimeout(() => setPendingNavigation(null), delay);
+    return () => window.clearTimeout(timer);
+  }, [pathname, pendingNavigation]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -45,17 +52,18 @@ export default function Navbar() {
   }, []);
 
   return (
+    <>
     <header className="sticky top-0 z-40 bg-slate-950/90 px-2 pt-2 text-slate-200 backdrop-blur-xl sm:px-6 sm:pt-3">
       <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-2 rounded-full border border-slate-800 bg-slate-900/95 px-2.5 shadow-lg shadow-slate-950/5 sm:min-h-16 sm:gap-3 sm:px-5">
-        <Link href="/" className="flex min-w-0 shrink items-center gap-1.5 rounded-full text-sm font-bold tracking-tight text-white sm:gap-2 sm:text-lg">
+        <Link href="/" className="group flex min-w-0 shrink items-center gap-1.5 rounded-full text-sm font-bold tracking-tight text-white transition-colors hover:text-[#7e22ce] sm:gap-2 sm:text-lg">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/15"><Sparkles className="h-4 w-4 text-indigo-400" /></span>
-          <span className="truncate">FabricFit<span className="text-indigo-400"> AI</span></span>
+          <span className="vton-heading truncate">Ronak House<span className="text-indigo-400 group-hover:text-[#7e22ce]"> TryON</span></span>
         </Link>
 
         <nav aria-label="Main navigation" className="hidden items-center gap-1 rounded-full bg-slate-950/60 p-1 text-sm font-medium md:flex">
-          <NavLink href="/studio" active={pathname.startsWith("/studio") || pathname.startsWith("/result")}>Studio</NavLink>
-          {isAuthenticated && <NavLink href="/library" active={pathname.startsWith("/library")}>Library</NavLink>}
-          <NavLink href="/pricing" active={pathname.startsWith("/pricing")}>Pricing</NavLink>
+          <NavLink href="/studio" active={pathname.startsWith("/studio") || pathname.startsWith("/result")} onNavigate={setPendingNavigation}>Studio</NavLink>
+          {isAuthenticated && <NavLink href="/library" active={pathname.startsWith("/library")} onNavigate={setPendingNavigation}>Library</NavLink>}
+          <NavLink href="/pricing" active={pathname.startsWith("/pricing")} onNavigate={setPendingNavigation}>Pricing</NavLink>
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
@@ -66,41 +74,66 @@ export default function Navbar() {
           )}
           <ThemeToggle />
           {isAuthenticated ? (
-            <Link href="/profile" aria-label={userName} title={userName} className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-slate-700 bg-indigo-600 text-xs font-bold text-white transition hover:ring-2 hover:ring-indigo-400/40">
+            <Link href="/profile" aria-label={userName} title={userName} className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-slate-700 bg-indigo-600 text-xs font-bold text-white transition hover:border-[#7e22ce] hover:ring-2 hover:ring-[#7e22ce]/40">
               {avatarUrl ? <Image src={avatarUrl} alt="" width={40} height={40} unoptimized className="h-full w-full object-cover" /> : <User className="h-4 w-4" />}
             </Link>
           ) : (
-            <button onClick={() => setIsAuthOpen(true)} className="min-h-10 rounded-full bg-indigo-600 px-3 text-xs font-semibold text-white transition hover:bg-indigo-500 sm:px-4">
+            <button onClick={() => setIsAuthOpen(true)} className="min-h-10 rounded-full bg-indigo-600 px-3 text-xs font-semibold text-white transition hover:bg-[#7e22ce] sm:px-4">
               Sign in
             </button>
           )}
         </div>
       </div>
       <nav aria-label="Mobile navigation" className="mx-auto flex max-w-7xl gap-1.5 overflow-x-auto px-1 py-1.5 text-xs font-medium md:hidden">
-        <NavLink href="/studio" active={pathname.startsWith("/studio") || pathname.startsWith("/result")}>Studio</NavLink>
-        {isAuthenticated && <NavLink href="/library" active={pathname.startsWith("/library")}>Library</NavLink>}
-        <NavLink href="/pricing" active={pathname.startsWith("/pricing")}>Pricing</NavLink>
+        <NavLink href="/studio" active={pathname.startsWith("/studio") || pathname.startsWith("/result")} onNavigate={setPendingNavigation}>Studio</NavLink>
+        {isAuthenticated && <NavLink href="/library" active={pathname.startsWith("/library")} onNavigate={setPendingNavigation}>Library</NavLink>}
+        <NavLink href="/pricing" active={pathname.startsWith("/pricing")} onNavigate={setPendingNavigation}>Pricing</NavLink>
       </nav>
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </header>
+    {pendingNavigation && pendingNavigation !== pathname && <NavigationLoadingOverlay />}
+    </>
   );
 }
 
-function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
-  const pendingLabel = href === "/studio" ? "Opening Studio..." : href === "/library" ? "Opening Library..." : "Loading plans...";
+function NavLink({
+  href,
+  active,
+  onNavigate,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  onNavigate: (label: string) => void;
+  children: React.ReactNode;
+}) {
   return (
-    <Link href={href} prefetch={false} aria-current={active ? "page" : undefined} className={`inline-flex min-h-10 items-center whitespace-nowrap rounded-full px-3 transition-colors ${active ? "bg-slate-800 text-white" : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"}`}>
-      <NavLinkLabel pendingLabel={pendingLabel}>{children}</NavLinkLabel>
+    <Link
+      href={href}
+      prefetch={false}
+      aria-current={active ? "page" : undefined}
+      onClick={(event) => {
+        if (active || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        onNavigate(href);
+      }}
+      className={`vton-header-nav-link inline-flex min-h-10 items-center whitespace-nowrap rounded-full px-3 transition-colors ${active ? "bg-[#7e22ce] text-white" : "text-slate-400 hover:bg-[#7e22ce] hover:text-white"}`}
+    >
+      {children}
     </Link>
   );
 }
 
-function NavLinkLabel({ children, pendingLabel }: { children: React.ReactNode; pendingLabel: string }) {
-  const { pending } = useLinkStatus();
+function NavigationLoadingOverlay() {
   return (
-    <span aria-live="polite" className="inline-flex items-center gap-1.5">
-      {pending && <span aria-hidden="true" className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />}
-      {pending ? pendingLabel : children}
-    </span>
+    <div className="vton-navigation-loading vton-ui" role="status" aria-live="polite">
+      <div className="vton-navigation-loader">
+        <span className="vton-loader-orbit vton-loader-orbit-outer" aria-hidden="true" />
+        <span className="vton-loader-orbit vton-loader-orbit-inner" aria-hidden="true" />
+        <Sparkles className="vton-loader-sparkle" aria-hidden="true" />
+        <LoaderCircle className="vton-loader-spinner" aria-hidden="true" />
+      </div>
+      <p className="vton-navigation-title">Preparing your style</p>
+      <p className="vton-navigation-caption">Just a moment while your next look loads.</p>
+    </div>
   );
 }

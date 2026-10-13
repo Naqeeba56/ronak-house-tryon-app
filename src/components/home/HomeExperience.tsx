@@ -23,9 +23,11 @@ export default function HomeExperience() {
   const [selectedGender, setSelectedGender] = useState<Gender>("male");
   const [selectedOutfit, setSelectedOutfit] = useState("Kurta");
   const outfitsRef = useRef<HTMLDivElement>(null);
-  const outfits = GARMENT_PRESETS;
+  const outfits = GARMENT_PRESETS.filter(
+    (outfit) => (outfit.gender ?? "male") === selectedGender,
+  );
   const selectedOutfitPreset = outfits.find((outfit) => outfit.label === selectedOutfit) ?? outfits[0];
-  const outfitPreview = selectedOutfitPreset.thumbnails[selectedGender];
+  const outfitPreview = selectedOutfitPreset.thumbnails?.[selectedGender] ?? "/models/default-male-tailored.webp";
 
   useEffect(() => {
     const supabase = createClient();
@@ -46,6 +48,11 @@ export default function HomeExperience() {
 
   const chooseGender = (gender: Gender) => {
     setSelectedGender(gender);
+    setSelectedOutfit(gender === "female" ? "Saree" : "Kurta");
+  };
+
+  const chooseOutfit = (label: string) => {
+    setSelectedOutfit(label);
   };
 
   return (
@@ -136,37 +143,53 @@ export default function HomeExperience() {
                 </div>
               </div>
             </div>
-            <div className="mt-3 flex min-w-0 items-center gap-1.5">
-              <button
-                type="button"
-                aria-label="Scroll outfit options left"
-                onClick={() => outfitsRef.current?.scrollBy({ left: -200, behavior: "smooth" })}
-                className="inline-flex h-10 w-9 shrink-0 items-center justify-center rounded-full border border-slate-800 bg-slate-950 text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 hover:text-white active:scale-95"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <div ref={outfitsRef} className="style-explorer-outfits flex min-w-0 snap-x gap-2 overflow-x-auto scroll-smooth px-0.5 py-1">
+            {selectedGender === "female" ? (
+              <div className="mt-3 grid grid-cols-3 gap-2">
                 {outfits.map((outfit) => (
                   <button
                     key={outfit.label}
                     type="button"
                     aria-pressed={selectedOutfit === outfit.label}
-                    onClick={() => setSelectedOutfit(outfit.label)}
-                    className={`min-h-10 shrink-0 snap-start rounded-full border px-3 text-xs font-medium transition active:scale-95 ${selectedOutfit === outfit.label ? "border-indigo-400/60 bg-indigo-500/15 text-white" : "border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700 hover:text-white"}`}
+                    onClick={() => chooseOutfit(outfit.label)}
+                    className={`min-h-11 rounded-xl border px-2 text-xs font-semibold transition active:scale-95 ${selectedOutfit === outfit.label ? "border-indigo-400/60 bg-indigo-500/15 text-white" : "border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700 hover:text-slate-100"}`}
                   >
                     {outfit.label}
                   </button>
                 ))}
               </div>
-              <button
-                type="button"
-                aria-label="Scroll outfit options right"
-                onClick={() => outfitsRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
-                className="inline-flex h-10 w-9 shrink-0 items-center justify-center rounded-full border border-slate-800 bg-slate-950 text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 hover:text-white active:scale-95"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+            ) : (
+              <div className="mt-3 flex min-w-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  aria-label="Scroll outfit options left"
+                  onClick={() => outfitsRef.current?.scrollBy({ left: -200, behavior: "smooth" })}
+                  className="inline-flex h-10 w-9 shrink-0 items-center justify-center rounded-full border border-slate-800 bg-slate-950 text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 hover:text-slate-100 active:scale-95"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <div ref={outfitsRef} className="style-explorer-outfits flex min-w-0 snap-x gap-2 overflow-x-auto scroll-smooth px-0.5 py-1">
+                  {outfits.map((outfit) => (
+                    <button
+                      key={outfit.label}
+                      type="button"
+                      aria-pressed={selectedOutfit === outfit.label}
+                      onClick={() => chooseOutfit(outfit.label)}
+                      className={`min-h-10 shrink-0 snap-start rounded-full border px-3 text-xs font-medium transition active:scale-95 ${selectedOutfit === outfit.label ? "border-indigo-400/60 bg-indigo-500/15 text-white" : "border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700 hover:text-slate-100"}`}
+                    >
+                      {outfit.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  aria-label="Scroll outfit options right"
+                  onClick={() => outfitsRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
+                  className="inline-flex h-10 w-9 shrink-0 items-center justify-center rounded-full border border-slate-800 bg-slate-950 text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 hover:text-slate-100 active:scale-95"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
             <p className="px-2 pt-3 text-[11px] text-slate-500 sm:px-3">
               Explore styles here. Your personal AI try-on starts in the Studio.
             </p>
