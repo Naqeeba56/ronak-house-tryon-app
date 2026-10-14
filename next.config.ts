@@ -4,6 +4,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, "");
 const supabaseImageHost = supabaseUrl ? new URL(supabaseUrl) : null;
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   reactCompiler: true,
   images: {
     formats: ["image/avif", "image/webp"],

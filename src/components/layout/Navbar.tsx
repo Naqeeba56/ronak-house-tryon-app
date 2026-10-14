@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { LoaderCircle, Sparkles, User } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Sparkles, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { APP_ADMIN_EMAIL } from "@/lib/constants";
 import AuthModal from "@/components/auth/AuthModal";
@@ -14,22 +15,15 @@ export default function Navbar() {
   const pathname = usePathname();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [tryOnBalance, setTryOnBalance] = useState<number | "unlimited" | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [userName, setUserName] = useState("Open profile");
-  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!pendingNavigation) return;
-    const delay = pendingNavigation === pathname ? 0 : 15_000;
-    const timer = window.setTimeout(() => setPendingNavigation(null), delay);
-    return () => window.clearTimeout(timer);
-  }, [pathname, pendingNavigation]);
-
   useEffect(() => {
     const supabase = createClient();
     const updateUser = (user: { id?: string; email?: string | null; user_metadata?: { avatar_url?: string; picture?: string; full_name?: string; name?: string } } | null) => {
       setIsAuthenticated(Boolean(user));
+      setIsAuthReady(true);
       setAvatarUrl(user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null);
       setUserName(user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? "Open profile");
       if (!user) {
@@ -61,9 +55,9 @@ export default function Navbar() {
         </Link>
 
         <nav aria-label="Main navigation" className="hidden items-center gap-1 rounded-full bg-slate-950/60 p-1 text-sm font-medium md:flex">
-          <NavLink href="/studio" active={pathname.startsWith("/studio") || pathname.startsWith("/result")} onNavigate={setPendingNavigation}>Studio</NavLink>
-          {isAuthenticated && <NavLink href="/library" active={pathname.startsWith("/library")} onNavigate={setPendingNavigation}>Library</NavLink>}
-          <NavLink href="/pricing" active={pathname.startsWith("/pricing")} onNavigate={setPendingNavigation}>Pricing</NavLink>
+          <NavLink href="/studio" active={pathname.startsWith("/studio") || pathname.startsWith("/result")} isAuthReady={isAuthReady} isAuthenticated={isAuthenticated} onAuthRequired={() => setIsAuthOpen(true)} requiresAuth>Studio</NavLink>
+          <NavLink href="/library" active={pathname.startsWith("/library")} isAuthReady={isAuthReady} isAuthenticated={isAuthenticated} onAuthRequired={() => setIsAuthOpen(true)} requiresAuth>Library</NavLink>
+          <NavLink href="/pricing" active={pathname.startsWith("/pricing")}>Pricing</NavLink>
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
@@ -73,25 +67,32 @@ export default function Navbar() {
             </span>
           )}
           <ThemeToggle />
-          {isAuthenticated ? (
-            <Link href="/profile" aria-label={userName} title={userName} className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-slate-700 bg-indigo-600 text-xs font-bold text-white transition hover:border-[#7e22ce] hover:ring-2 hover:ring-[#7e22ce]/40">
-              {avatarUrl ? <Image src={avatarUrl} alt="" width={40} height={40} unoptimized className="h-full w-full object-cover" /> : <User className="h-4 w-4" />}
-            </Link>
-          ) : (
-            <button onClick={() => setIsAuthOpen(true)} className="min-h-10 rounded-full bg-indigo-600 px-3 text-xs font-semibold text-white transition hover:bg-[#7e22ce] sm:px-4">
-              Sign in
-            </button>
-          )}
+          <div className="flex h-10 min-w-[5.5rem] items-center justify-end">
+            <AnimatePresence mode="wait" initial={false}>
+              {!isAuthReady ? (
+                <motion.span key="checking" aria-hidden="true" className="h-9 w-9 rounded-full bg-slate-800" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
+              ) : isAuthenticated ? (
+                <motion.div key="profile" initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.92 }} transition={{ type: "spring", stiffness: 420, damping: 30 }}>
+                  <Link href="/profile" aria-label={userName} title={userName} className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-slate-700 bg-indigo-600 text-xs font-bold text-white transition hover:border-[#7e22ce] hover:ring-2 hover:ring-[#7e22ce]/40">
+                    {avatarUrl ? <Image src={avatarUrl} alt="" width={40} height={40} unoptimized className="h-full w-full object-cover" /> : <User className="h-4 w-4" />}
+                  </Link>
+                </motion.div>
+              ) : (
+                <motion.button key="signin" type="button" onClick={() => setIsAuthOpen(true)} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ type: "spring", stiffness: 420, damping: 30 }} className="min-h-10 rounded-full bg-indigo-600 px-3 text-xs font-semibold text-white transition hover:scale-[1.02] hover:bg-[#7e22ce] active:scale-[0.98] sm:px-4">
+                  Sign in
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
       <nav aria-label="Mobile navigation" className="mx-auto flex max-w-7xl gap-1.5 overflow-x-auto px-1 py-1.5 text-xs font-medium md:hidden">
-        <NavLink href="/studio" active={pathname.startsWith("/studio") || pathname.startsWith("/result")} onNavigate={setPendingNavigation}>Studio</NavLink>
-        {isAuthenticated && <NavLink href="/library" active={pathname.startsWith("/library")} onNavigate={setPendingNavigation}>Library</NavLink>}
-        <NavLink href="/pricing" active={pathname.startsWith("/pricing")} onNavigate={setPendingNavigation}>Pricing</NavLink>
+        <NavLink href="/studio" active={pathname.startsWith("/studio") || pathname.startsWith("/result")} isAuthReady={isAuthReady} isAuthenticated={isAuthenticated} onAuthRequired={() => setIsAuthOpen(true)} requiresAuth>Studio</NavLink>
+        <NavLink href="/library" active={pathname.startsWith("/library")} isAuthReady={isAuthReady} isAuthenticated={isAuthenticated} onAuthRequired={() => setIsAuthOpen(true)} requiresAuth>Library</NavLink>
+        <NavLink href="/pricing" active={pathname.startsWith("/pricing")}>Pricing</NavLink>
       </nav>
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </header>
-    {pendingNavigation && pendingNavigation !== pathname && <NavigationLoadingOverlay />}
     </>
   );
 }
@@ -99,41 +100,34 @@ export default function Navbar() {
 function NavLink({
   href,
   active,
-  onNavigate,
+  isAuthReady = true,
+  isAuthenticated = true,
+  onAuthRequired,
+  requiresAuth = false,
   children,
 }: {
   href: string;
   active: boolean;
-  onNavigate: (label: string) => void;
+  isAuthReady?: boolean;
+  isAuthenticated?: boolean;
+  onAuthRequired?: () => void;
+  requiresAuth?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <Link
       href={href}
-      prefetch={false}
       aria-current={active ? "page" : undefined}
       onClick={(event) => {
-        if (active || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        onNavigate(href);
+        if (requiresAuth && (!isAuthReady || !isAuthenticated)) {
+          event.preventDefault();
+          if (isAuthReady) onAuthRequired?.();
+          return;
+        }
       }}
       className={`vton-header-nav-link inline-flex min-h-10 items-center whitespace-nowrap rounded-full px-3 transition-colors ${active ? "bg-[#7e22ce] text-white" : "text-slate-400 hover:bg-[#7e22ce] hover:text-white"}`}
     >
       {children}
     </Link>
-  );
-}
-
-function NavigationLoadingOverlay() {
-  return (
-    <div className="vton-navigation-loading vton-ui" role="status" aria-live="polite">
-      <div className="vton-navigation-loader">
-        <span className="vton-loader-orbit vton-loader-orbit-outer" aria-hidden="true" />
-        <span className="vton-loader-orbit vton-loader-orbit-inner" aria-hidden="true" />
-        <Sparkles className="vton-loader-sparkle" aria-hidden="true" />
-        <LoaderCircle className="vton-loader-spinner" aria-hidden="true" />
-      </div>
-      <p className="vton-navigation-title">Preparing your style</p>
-      <p className="vton-navigation-caption">Just a moment while your next look loads.</p>
-    </div>
   );
 }

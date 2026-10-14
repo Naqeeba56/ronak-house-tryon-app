@@ -4,15 +4,15 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import GeneratingIndicator from "@/components/studio/GeneratingIndicator";
-import { GARMENT_PRESETS, TRY_ON_MODEL_PRESETS } from "@/lib/constants";
+import ErrorAlert from "@/components/ui/ErrorAlert";
+import { DEFAULT_MODEL_IMAGE_URL, GARMENT_PRESETS, TRY_ON_MODEL_PRESETS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import {
   Crop,
   ImagePlus,
-  LoaderCircle,
   RefreshCw,
   Sparkles,
   Trash2,
@@ -78,50 +78,90 @@ async function createTryOnMask(region: TryOnRegion, modelImageUrl: string) {
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Could not prepare the selected outfit area.");
 
-  context.scale(canvas.width / 512, canvas.height / 768);
   context.fillStyle = "#000";
-  context.fillRect(0, 0, 512, 768);
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  const scale = Math.min(canvas.width / 512, canvas.height / 768);
+  context.translate((canvas.width - 512 * scale) / 2, (canvas.height - 768 * scale) / 2);
+  context.scale(scale, scale);
   context.fillStyle = "#fff";
-  context.filter = `blur(${Math.max(5, canvas.height * 0.008)}px)`;
+  context.filter = "blur(2px)";
 
   const drawUpperBody = (hemY: number) => {
     context.beginPath();
-    context.moveTo(154, 196);
-    context.quadraticCurveTo(256, 238, 358, 196);
-    context.lineTo(405, 258);
-    context.quadraticCurveTo(390, 320, 377, hemY - 30);
-    context.quadraticCurveTo(256, hemY, 135, hemY - 30);
-    context.lineTo(107, 320);
-    context.lineTo(107, 258);
+    context.moveTo(220, 172);
+    context.quadraticCurveTo(188, 164, 154, 170);
+    context.lineTo(134, 226);
+    context.quadraticCurveTo(128, 258, 142, 300);
+    context.lineTo(154, 410);
+    context.quadraticCurveTo(158, 446, 154, 474);
+    context.lineTo(178, 470);
+    context.lineTo(190, 302);
+    context.quadraticCurveTo(188, 270, 192, 246);
+    context.lineTo(188, hemY - 30);
+    context.quadraticCurveTo(256, hemY, 324, hemY - 30);
+    context.lineTo(320, 246);
+    context.quadraticCurveTo(324, 270, 322, 302);
+    context.lineTo(334, 470);
+    context.lineTo(358, 474);
+    context.quadraticCurveTo(358, 446, 358, 410);
+    context.lineTo(370, 300);
+    context.quadraticCurveTo(384, 258, 378, 226);
+    context.lineTo(358, 170);
+    context.quadraticCurveTo(324, 164, 292, 172);
+    context.quadraticCurveTo(286, 194, 256, 202);
+    context.quadraticCurveTo(226, 194, 220, 172);
+    context.closePath();
+    context.fill();
+  };
+
+  const drawSleevelessUpperBody = (hemY: number) => {
+    context.beginPath();
+    context.moveTo(220, 172);
+    context.quadraticCurveTo(188, 164, 154, 170);
+    context.lineTo(180, 236);
+    context.quadraticCurveTo(186, 250, 188, 278);
+    context.lineTo(188, hemY - 30);
+    context.quadraticCurveTo(256, hemY, 324, hemY - 30);
+    context.lineTo(324, 278);
+    context.quadraticCurveTo(326, 250, 332, 236);
+    context.lineTo(358, 170);
+    context.quadraticCurveTo(324, 164, 292, 172);
+    context.quadraticCurveTo(286, 194, 256, 202);
+    context.quadraticCurveTo(226, 194, 220, 172);
     context.closePath();
     context.fill();
   };
 
   const drawLowerBody = (waistY: number, hemY: number) => {
     context.beginPath();
-    context.moveTo(150, waistY);
-    context.quadraticCurveTo(256, waistY - 12, 362, waistY);
-    context.quadraticCurveTo(390, waistY + 44, 372, waistY + 92);
-    context.lineTo(358, hemY);
-    context.lineTo(270, hemY);
-    context.lineTo(264, waistY + 142);
-    context.lineTo(248, hemY);
-    context.lineTo(154, hemY);
-    context.lineTo(140, waistY + 92);
-    context.quadraticCurveTo(122, waistY + 44, 150, waistY);
+    context.moveTo(188, waistY);
+    context.quadraticCurveTo(256, waistY - 8, 324, waistY);
+    context.quadraticCurveTo(334, waistY + 54, 318, waistY + 126);
+    context.lineTo(324, hemY);
+    context.lineTo(261, hemY);
+    context.lineTo(256, waistY + 150);
+    context.lineTo(251, hemY);
+    context.lineTo(188, hemY);
+    context.lineTo(194, waistY + 126);
+    context.quadraticCurveTo(178, waistY + 54, 188, waistY);
     context.closePath();
     context.fill();
   };
 
   if (region === "upper") {
-    drawUpperBody(424);
+    drawUpperBody(414);
+  } else if (region === "sleeveless-upper") {
+    drawSleevelessUpperBody(414);
   } else if (region === "long-upper") {
     drawUpperBody(530);
+  } else if (region === "long-set") {
+    drawUpperBody(530);
+    drawLowerBody(500, 690);
   } else if (region === "lower") {
-    drawLowerBody(420, 742);
+    drawLowerBody(404, 690);
   } else {
-    drawUpperBody(424);
-    drawLowerBody(420, 742);
+    drawUpperBody(414);
+    drawLowerBody(404, 690);
   }
   context.filter = "none";
 
@@ -154,6 +194,7 @@ function PhotoUploadCard({
               src={previewUrl}
               alt={`${title} preview`}
               fill
+              loading="eager"
               unoptimized={Boolean(image)}
               sizes="(max-width: 640px) 100vw, 360px"
               className={`vton-image-enter transition duration-300 ${isCropped ? "object-cover" : "object-contain"}`}
@@ -204,6 +245,7 @@ function PhotoUploadCard({
 
 export default function StudioPage() {
   const router = useRouter();
+  const reduceMotion = useReducedMotion();
   const [garmentType, setGarmentType] = useState("Shirt");
   const [garmentImage, setGarmentImage] = useState<UploadedImage | null>(null);
   const [modelImage, setModelImage] = useState<UploadedImage | null>(null);
@@ -222,8 +264,11 @@ export default function StudioPage() {
     (preset) => (preset.gender ?? "male") === selectedGender,
   );
   const selectedPreset = outfitPresets.find(({ label }) => label === garmentType) ?? outfitPresets[0];
+  const defaultModelPreset =
+    TRY_ON_MODEL_PRESETS.find(({ gender }) => gender === selectedGender) ?? TRY_ON_MODEL_PRESETS[0];
   const selectedModelPreset =
-    TRY_ON_MODEL_PRESETS.find(({ id }) => id === selectedModelPresetId) ?? null;
+    TRY_ON_MODEL_PRESETS.find(({ id }) => id === selectedModelPresetId) ?? defaultModelPreset;
+  const previewModelImage = modelImage?.dataUrl ?? selectedModelPreset?.imageUrl ?? DEFAULT_MODEL_IMAGE_URL;
 
   useEffect(() => {
     let isMounted = true;
@@ -374,7 +419,7 @@ export default function StudioPage() {
                   sampleImageUrl={selectedModelPreset?.imageUrl}
                   onRemove={() => {
                     setModelImage(null);
-                    setSelectedModelPresetId(null);
+                    setSelectedModelPresetId(defaultModelPreset.id);
                   }}
                   onChange={(event) => {
                     void handleImageUpload(event, (image) => {
@@ -453,16 +498,32 @@ export default function StudioPage() {
                 </div>
                 <span className="rounded-full border border-slate-700 bg-slate-950 px-3 py-1 text-xs font-medium capitalize text-slate-300">{selectedGender}</span>
               </div>
-              <div className="media-overlay relative aspect-[4/5] bg-slate-100">
-                <Image
-                  src={modelImage?.dataUrl ?? selectedModelPreset?.imageUrl ?? TRY_ON_MODEL_PRESETS[0].imageUrl}
-                  alt={modelImage ? "Your uploaded photo" : `Full-body ${selectedGender} model facing the camera`}
-                  fill
-                  unoptimized={Boolean(modelImage)}
-                  className={modelImage ? "object-cover" : "object-contain"}
-                  sizes="(max-width: 1024px) 100vw, 420px"
-                />
+              <div className="media-overlay vton-studio-canvas relative aspect-[4/5]">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={previewModelImage}
+                    className="absolute inset-0"
+                    initial={reduceMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={reduceMotion ? undefined : { opacity: 0 }}
+                    transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <Image
+                      src={previewModelImage}
+                      alt={modelImage ? "Your uploaded photo" : `Full-body ${selectedGender} model facing the camera`}
+                      fill
+                      loading="eager"
+                      fetchPriority="high"
+                      unoptimized={Boolean(modelImage)}
+                      className={modelImage ? "object-cover" : "object-contain"}
+                      sizes="(max-width: 1024px) 100vw, 420px"
+                    />
+                  </motion.div>
+                </AnimatePresence>
                 <div className="media-gradient-fade absolute inset-0" />
+                <AnimatePresence initial={false}>
+                  {isGenerating && <GeneratingIndicator />}
+                </AnimatePresence>
                 <div className="absolute inset-x-4 bottom-4 flex items-end justify-between gap-4">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-indigo-200">Selected outfit</p>
@@ -476,17 +537,14 @@ export default function StudioPage() {
                   <span className="text-xs text-slate-400">Try-ons available</span>
                   <span className="text-sm font-semibold text-white">{!isSignedIn ? "1 free after sign-in" : !isBalanceReady ? "Loading…" : isAdmin ? "Unlimited" : `${(freeRemaining ?? 0) + (packRemaining ?? 0)} remaining`}</span>
                 </div>
-                <AnimatePresence initial={false}>
-                  {isGenerating && <GeneratingIndicator />}
-                </AnimatePresence>
-                {error && <p role="alert" className="rounded-xl border border-rose-400/20 bg-rose-400/5 p-3 text-sm text-rose-300">{error}</p>}
+                {error && <ErrorAlert description={error} className="w-full sm:w-full" onDismiss={() => setError(null)} />}
                 <button
                   type="button"
                   onClick={() => void generateLook()}
                   disabled={isGenerating || !isAuthReady || (isSignedIn && (!isBalanceReady || (!isAdmin && (freeRemaining ?? 0) + (packRemaining ?? 0) === 0)))}
                   className="vton-primary flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold shadow-lg shadow-indigo-600/15 disabled:cursor-wait disabled:opacity-60"
                 >
-                  {isGenerating ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  {isGenerating ? <span className="vton-line-loader" aria-hidden="true" /> : <Sparkles className="h-4 w-4" />}
                   {isGenerating ? "Creating your try-on…" : !isAuthReady ? "Checking account…" : isSignedIn ? "Generate my try-on" : "Try on for free"}
                 </button>
                 {isSignedIn && !isAdmin && isBalanceReady && freeRemaining === 0 && packRemaining === 0 && (

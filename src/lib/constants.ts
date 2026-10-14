@@ -15,21 +15,23 @@ export const TRY_ON_MODEL_PRESETS: BaseModel[] = [
     id: "try-on-male",
     name: "Male model - full body",
     gender: "male",
-    imageUrl: "/models/default-male-tailored.webp",
+    imageUrl: "/models/studio-male-model.webp",
   },
   {
     id: "try-on-female",
     name: "Female model - full body",
     gender: "female",
-    imageUrl: "/models/default-female-professional.webp",
+    imageUrl: "/models/studio-female-model.webp",
   },
 ];
+
+export const DEFAULT_MODEL_IMAGE_URL = TRY_ON_MODEL_PRESETS[0].imageUrl;
 
 type GarmentPresetDefinition = {
   label: string;
   description: string;
   fabricTarget: string;
-  region: "upper" | "lower" | "long-upper" | "full";
+  region: "upper" | "sleeveless-upper" | "lower" | "long-upper" | "long-set" | "full";
   gender?: "male" | "female";
   thumbnails?: Partial<Record<"male" | "female", string>>;
 };
@@ -40,69 +42,70 @@ export const GARMENT_PRESETS: readonly GarmentPresetDefinition[] = [
     description: "a tailored collared shirt",
     fabricTarget: "the shirt body and sleeves",
     region: "upper",
-    thumbnails: { male: "/outfit-presets/male-shirt.webp", female: "/outfit-presets/female-shirt.webp" },
+    gender: "male",
+    thumbnails: { male: "/outfit-presets/male-shirt.webp" },
   },
   {
     label: "Pant",
     description: "full-length tailored trousers",
     fabricTarget: "both trouser legs from the waistband to the hems",
     region: "lower",
-    thumbnails: { male: "/outfit-presets/male-pant.webp", female: "/outfit-presets/female-pant.webp" },
+    gender: "male",
+    thumbnails: { male: "/outfit-presets/male-pant.webp" },
   },
   {
     label: "Indo-Western Jacket",
     description: "a tailored Indo-Western jacket",
     fabricTarget: "the jacket body and sleeves",
     region: "long-upper",
-    thumbnails: { male: "/outfit-presets/male-indo-jacket.webp", female: "/outfit-presets/female-indo-jacket.webp" },
+    gender: "male",
+    thumbnails: { male: "/outfit-presets/male-indo-jacket.webp" },
   },
   {
     label: "2-Piece Suit",
     description: "a coordinated two-piece suit with a jacket and matching trousers",
     fabricTarget: "the suit jacket and both matching trouser legs",
     region: "full",
-    thumbnails: { male: "/outfit-presets/male-suit-two-piece.webp", female: "/outfit-presets/female-suit-two-piece.webp" },
+    gender: "male",
+    thumbnails: { male: "/outfit-presets/male-suit-two-piece.webp" },
   },
   {
     label: "3-Piece Suit",
     description: "a coordinated three-piece suit with a jacket, waistcoat, and matching trousers",
     fabricTarget: "the jacket, waistcoat, and both matching trouser legs",
     region: "full",
-    thumbnails: { male: "/outfit-presets/male-suit-three-piece.webp", female: "/outfit-presets/female-suit-three-piece.webp" },
+    gender: "male",
+    thumbnails: { male: "/outfit-presets/male-suit-three-piece.webp" },
   },
   {
     label: "Blazer",
     description: "a structured tailored blazer",
     fabricTarget: "the blazer body and sleeves",
     region: "upper",
-    thumbnails: { male: "/outfit-presets/male-blazer.webp", female: "/outfit-presets/female-blazer.webp" },
+    gender: "male",
+    thumbnails: { male: "/outfit-presets/male-blazer.webp" },
   },
   {
     label: "Nehru Jacket",
     description: "a sleeveless, high-collar Nehru jacket",
     fabricTarget: "the Nehru jacket",
-    region: "upper",
-    thumbnails: { male: "/outfit-presets/male-nehru-jacket.webp", female: "/outfit-presets/female-nehru-jacket.webp" },
-  },
-  {
-    label: "Indo Western",
-    description: "a coordinated Indo-Western outfit",
-    fabricTarget: "the selected Indo-Western garment pieces",
-    region: "full",
-    thumbnails: { male: "/outfit-presets/male-indo-western.webp", female: "/outfit-presets/female-indo-western.webp" },
+    region: "sleeveless-upper",
+    gender: "male",
+    thumbnails: { male: "/outfit-presets/male-nehru-jacket.webp" },
   },
   {
     label: "Sherwani",
     description: "a formal knee-length sherwani",
     fabricTarget: "the sherwani body and sleeves",
-    region: "long-upper",
-    thumbnails: { male: "/outfit-presets/male-sherwani.webp", female: "/outfit-presets/female-sherwani.webp" },
+    region: "long-set",
+    gender: "male",
+    thumbnails: { male: "/outfit-presets/male-sherwani.webp" },
   },
   {
     label: "Kurta",
     description: "a traditional straight-cut, knee-length kurta",
     fabricTarget: "the kurta body and sleeves",
-    region: "long-upper",
+    region: "long-set",
     gender: "male",
     thumbnails: { male: "/outfit-presets/male-kurta.webp" },
   },
@@ -111,19 +114,29 @@ export const GARMENT_PRESETS: readonly GarmentPresetDefinition[] = [
     description: "a traditional Pathani kurta with matching full-length trousers",
     fabricTarget: "the Pathani kurta and both matching trouser legs",
     region: "full",
-    thumbnails: { male: "/outfit-presets/male-pathani.webp", female: "/outfit-presets/female-pathani.webp" },
+    gender: "male",
+    thumbnails: { male: "/outfit-presets/male-pathani.webp" },
   },
   {
     label: "Jodhpuri suit",
     description: "a tailored Jodhpuri bandhgala jacket with matching trousers",
     fabricTarget: "the Jodhpuri jacket and both matching trouser legs",
     region: "full",
-    thumbnails: { male: "/outfit-presets/male-jodhpuri.webp", female: "/outfit-presets/female-jodhpuri.webp" },
+    gender: "male",
+    thumbnails: { male: "/outfit-presets/male-jodhpuri.webp" },
   },
   {
     label: "Saree",
     description: "a traditional saree with a fitted blouse",
     fabricTarget: "the saree and blouse",
+    region: "full",
+    gender: "female",
+    thumbnails: { female: "/outfit-presets/female-shirt.webp" },
+  },
+  {
+    label: "Salwar suit",
+    description: "a traditional salwar suit with kameez, bottoms, and dupatta",
+    fabricTarget: "the kameez, coordinated bottoms, and dupatta",
     region: "full",
     gender: "female",
     thumbnails: { female: "/outfit-presets/female-saree.webp" },
@@ -134,15 +147,7 @@ export const GARMENT_PRESETS: readonly GarmentPresetDefinition[] = [
     fabricTarget: "the lehenga skirt, choli, and dupatta",
     region: "full",
     gender: "female",
-    thumbnails: { female: "/outfit-presets/female-nehru-jacket.webp" },
-  },
-  {
-    label: "Kurta",
-    description: "a straight-fit kurta with coordinated bottoms",
-    fabricTarget: "the kurta and coordinated bottoms",
-    region: "full",
-    gender: "female",
-    thumbnails: { female: "/outfit-presets/female-kurta.webp" },
+    thumbnails: { female: "/outfit-presets/female-indo-western.webp" },
   },
 ] as const;
 

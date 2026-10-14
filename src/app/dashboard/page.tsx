@@ -1,9 +1,17 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ArrowUpRight, IndianRupee, LayoutDashboard, Users, WandSparkles } from "lucide-react";
 import { APP_ADMIN_EMAIL } from "@/lib/constants";
+import { formatDisplayDate } from "@/lib/date-format";
+import ErrorAlert from "@/components/ui/ErrorAlert";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export const metadata: Metadata = {
+  title: "Owner Dashboard",
+  robots: { index: false, follow: false },
+};
 
 type PaidOrder = {
   razorpay_order_id: string;
@@ -20,7 +28,9 @@ export default async function DashboardPage() {
   const sessionClient = await createServerSupabaseClient();
   const { data: { user }, error: authError } = await sessionClient.auth.getUser();
   if (authError || !user) redirect("/?auth=required");
-  if (user.email?.trim().toLowerCase() !== APP_ADMIN_EMAIL) redirect("/");
+  const isOwner = user.app_metadata?.role === "owner"
+    || user.email?.trim().toLowerCase() === APP_ADMIN_EMAIL;
+  if (!isOwner) redirect("/");
 
   let analyticsError: string | null = null;
   let userCount = 0;
@@ -94,11 +104,11 @@ export default async function DashboardPage() {
         <Link href="/profile" className="inline-flex min-h-10 items-center gap-2 self-start rounded-full border border-slate-700 px-4 text-sm font-medium text-slate-300 transition hover:border-indigo-400/50 hover:text-white sm:self-auto">Account <ArrowUpRight className="h-4 w-4" /></Link>
       </header>
 
-      {analyticsError && (
-        <div role="alert" className="rounded-2xl border border-rose-400/20 bg-rose-400/5 p-4 text-sm text-rose-200">
-          Analytics could not be fully loaded: {analyticsError} Check that the server-only Supabase credential is configured and required migrations have been applied.
-        </div>
-      )}
+      {analyticsError && <ErrorAlert
+        description="Analytics could not be fully loaded."
+        details={<p className="mt-1 break-words text-gray-500">{analyticsError} Check that the server-only Supabase credential is configured and required migrations have been applied.</p>}
+        className="w-full sm:w-full"
+      />}
 
       <section aria-label="Key analytics" className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
         <MetricCard label="Registered users" value={analyticsError ? "—" : userCount.toLocaleString()} detail={analyticsError ? "Unavailable until Supabase is configured" : `${newUserCount} joined in the last 30 days`} icon={<Users className="h-5 w-5 text-indigo-300" />} />
@@ -114,7 +124,7 @@ export default async function DashboardPage() {
             {analyticsError ? <p className="px-5 py-8 text-sm text-slate-500">Sign-up analytics are unavailable until the server credential is configured.</p> : recentUsers.length ? recentUsers.map((account) => (
               <div key={account.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <div className="min-w-0"><p className="truncate text-sm font-medium text-slate-200">{account.name}</p><p className="truncate text-xs text-slate-500">{account.email}</p></div>
-                <time className="shrink-0 text-xs text-slate-500">{new Date(account.createdAt).toLocaleDateString()}</time>
+                <time className="shrink-0 text-xs text-slate-500">{formatDisplayDate(account.createdAt)}</time>
               </div>
             )) : <p className="px-5 py-8 text-sm text-slate-500">No user records to show.</p>}
           </div>
@@ -126,7 +136,7 @@ export default async function DashboardPage() {
             {paidOrders.slice(0, 8).length ? paidOrders.slice(0, 8).map((order) => (
               <div key={order.razorpay_order_id} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <div className="min-w-0"><p className="truncate text-sm font-medium capitalize text-slate-200">{order.plan_id} plan</p><p className="truncate text-xs text-slate-500">{paidUserMap.get(order.user_id) ?? order.razorpay_order_id}</p></div>
-                <div className="shrink-0 text-right"><p className="text-sm font-semibold text-emerald-300">{formatCurrency(order.amount_paise)}</p><time className="text-xs text-slate-500">{order.paid_at ? new Date(order.paid_at).toLocaleDateString() : "—"}</time></div>
+                <div className="shrink-0 text-right"><p className="text-sm font-semibold text-emerald-300">{formatCurrency(order.amount_paise)}</p><time className="text-xs text-slate-500">{order.paid_at ? formatDisplayDate(order.paid_at) : "—"}</time></div>
               </div>
             )) : <p className="px-5 py-8 text-sm text-slate-500">No captured payments yet.</p>}
           </div>

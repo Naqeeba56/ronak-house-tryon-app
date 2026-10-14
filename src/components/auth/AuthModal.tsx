@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { X, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import ErrorAlert from "@/components/ui/ErrorAlert";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,8 +15,8 @@ interface AuthModalProps {
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  if (!isOpen) return null;
+  const portalRoot = typeof document === "undefined" ? null : document.body;
+  if (!portalRoot) return null;
 
   const supabase = createClient();
 
@@ -32,8 +34,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-slate-950/80 p-3 backdrop-blur-md sm:p-6">
-      <div role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" className="relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-6">
+    <AnimatePresence>
+    {isOpen && <motion.div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-slate-950/80 p-3 backdrop-blur-md sm:p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+      <motion.div role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ type: "spring", stiffness: 380, damping: 30 }} className="relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-6">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -48,44 +51,35 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <div className="inline-flex p-3 rounded-xl bg-indigo-600/20 text-indigo-400 mb-3">
             <Sparkles className="w-6 h-6" />
           </div>
-          <h2 id="auth-modal-title" className="text-xl font-bold text-white">Welcome to FabricFit AI</h2>
+          <h2 id="auth-modal-title" className="text-xl font-bold text-white">Welcome to Ronak House TryON</h2>
           <p className="text-xs text-slate-400 mt-1">Sign in or create your account securely with Google.</p>
         </div>
 
-        {errorMsg && (
-          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-400">
-            {errorMsg}
-          </div>
-        )}
+        {errorMsg && <ErrorAlert description={errorMsg} className="mb-4 w-full sm:w-full" onDismiss={() => setErrorMsg(null)} />}
 
         <button
+          type="button"
           onClick={handleGoogleAuth}
           disabled={loading}
-          className="mb-4 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-xs font-medium text-slate-200 transition-colors hover:border-slate-600 hover:bg-slate-700"
+          className="vton-google-button mb-4 w-full"
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
-            <path
-              fill="#EA4335"
-              d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.2 9 5 12 5z"
-            />
-            <path
-              fill="#4285F4"
-              d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15s.7 5.3 1.9 7.7l3.7-2.9z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.2-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
-            />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 256 262"
+            aria-hidden="true"
+            className="vton-google-button-icon"
+          >
+            <path fill="#4285F4" d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" />
+            <path fill="#34A853" d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" />
+            <path fill="#FBBC05" d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" />
+            <path fill="#EB4335" d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" />
           </svg>
-          <span>{loading ? "Connecting..." : "Continue with Google"}</span>
+          <span className="vton-google-button-text">{loading ? "Connecting..." : "Continue with Google"}</span>
         </button>
-        <p className="mt-4 text-center text-[11px] leading-5 text-slate-500">Google manages your sign-in securely. No passwords or email forms are stored by FabricFit AI.</p>
-      </div>
-    </div>,
-    document.body,
+        <p className="mt-4 text-center text-[11px] leading-5 text-slate-500">Google manages your sign-in securely. No passwords or email forms are stored by Ronak House TryON.</p>
+      </motion.div>
+    </motion.div>}
+    </AnimatePresence>,
+    portalRoot,
   );
 }

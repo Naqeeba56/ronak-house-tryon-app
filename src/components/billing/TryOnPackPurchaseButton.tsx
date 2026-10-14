@@ -5,6 +5,7 @@ import { LoaderCircle, Sparkles } from "lucide-react";
 import AuthModal from "@/components/auth/AuthModal";
 import { APP_ADMIN_EMAIL, TRYON_PLANS, type TryOnPlanId } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import ErrorAlert from "@/components/ui/ErrorAlert";
 
 type OrderResponse = {
   orderId?: string;
@@ -183,7 +184,7 @@ export default function TryOnPackPurchaseButton({
       </button>
       )}
       {message && <p role="status" className="mt-2 text-xs text-emerald-300">{message}</p>}
-      {error && <p role="alert" className="mt-2 text-xs text-rose-300">{error}</p>}
+      {error && <ErrorAlert description={error} className="mt-2 w-full sm:w-full" onDismiss={() => setError(null)} />}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </div>
   );

@@ -6,7 +6,6 @@ export type OutfitCategory =
   | "3-Piece Suit"
   | "Blazer"
   | "Nehru Jacket"
-  | "Indo Western"
   | "Sherwani"
   | "Kurta"
   | "Pathani"

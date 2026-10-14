@@ -19,12 +19,12 @@ const OUTFIT_KEYS_BY_CATEGORY: Record<string, OutfitKey> = {
   "3-Piece Suit": "male-three-piece-suit",
   Blazer: "male-blazer",
   "Nehru Jacket": "male-nehru-jacket",
-  "Indo Western": "male-indo-western",
   Sherwani: "male-sherwani",
   Kurta: "male-kurta",
   Pathani: "male-pathani",
   "Jodhpuri suit": "male-jodhpuri-suit",
   Saree: "female-saree",
+  "Salwar suit": "female-salwar-suit",
   Lehenga: "female-lehenga",
 };
 
@@ -182,9 +182,7 @@ export async function POST(request: Request) {
   if (!garmentPreset) {
     return NextResponse.json({ error: "Choose a valid outfit for the selected model category." }, { status: 400 });
   }
-  const outfitKey = body.garmentType === "Kurta" && selectedGender === "female"
-    ? "female-kurta"
-    : body.garmentType ? OUTFIT_KEYS_BY_CATEGORY[body.garmentType] : undefined;
+  const outfitKey = body.garmentType ? OUTFIT_KEYS_BY_CATEGORY[body.garmentType] : undefined;
   if (!outfitKey || OUTFITS[outfitKey].gender !== selectedGender) {
     return NextResponse.json({ error: "Choose a valid outfit for the selected model category." }, { status: 400 });
   }

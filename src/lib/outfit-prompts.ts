@@ -88,40 +88,29 @@ export const OUTFITS = {
     d: "sleeveless hip-length jacket, closed mandarin collar, 5-6 front buttons, slightly fitted, welt pockets",
     f: "jacket",
     a: "plain white/cream full-sleeve kurta only if no top",
-    s: "SLEEVELESS: the person's own sleeves stay visible and unchanged; never extend fabric into sleeves",
+    s: "SLEEVELESS: fully show the closed mandarin collar and complete jacket front to the hem; the person's own sleeves stay visible and unchanged; never extend fabric into sleeves",
     k: "kurta/shirt underneath, lower garment",
-  },
-  "male-indo-western": {
-    label: "Indo-Western outfit",
-    gender: "male",
-    preset: "/outfit-presets/male-indo-western.webp",
-    r: "upper outfit and lower garment as one set",
-    d: "fusion set per preset: long kurta-jacket or asymmetric top, collar/neckline, closures, sleeves, slim straight trousers",
-    f: "main top; trousers same fabric only if preset shows a matching set, else plain complementary solid",
-    a: "none",
-    s: "one cohesive set; no ties/scarves/pocket squares unless preset has them; clean modern fit; trousers slim, end at shoe",
-    k: "none extra",
   },
   "male-sherwani": {
     label: "sherwani",
     gender: "male",
     preset: "/outfit-presets/male-sherwani.webp",
-    r: "upper outfit and lower garment as one set",
+    r: "replace the entire upper outfit and all original trousers from waist to ankles as one coordinated set",
     d: "knee-length sherwani, closed mandarin collar, structured shoulder, fitted waist, slight flare, full sleeves, decorative front buttons",
     f: "sherwani",
     a: "ivory/plain churidar or straight trousers; stole only if preset shows one",
-    s: "straight button column collar to hem; embroidery/zari only where the fabric has it, else tonal piping",
+    s: "straight button column collar to hem; trousers visible below the sherwani and fully replaced, with no original jeans showing; clean solid hem edge with no fading or blending; embroidery/zari only where the fabric has it, else tonal piping",
     k: "none extra",
   },
   "male-kurta": {
     label: "kurta set",
     gender: "male",
     preset: "/outfit-presets/male-kurta.webp",
-    r: "upper garment and lower garment as one set",
+    r: "replace the entire upper garment and all original trousers from waist to ankles as one coordinated set",
     d: "knee-length straight kurta, mandarin collar, short placket 3-4 buttons, full sleeves, side slits, relaxed fit",
     f: "kurta",
     a: "straight pyjama/churidar in plain solid complementing the fabric",
-    s: "bottoms visible from hem to ankle; natural vertical drape",
+    s: "bottoms visible from kurta hem to ankle and fully replace the original trousers; no original jeans showing; clean solid kurta hem edge with no fading or blending; natural vertical drape",
     k: "none extra",
   },
   "male-pathani": {
@@ -149,7 +138,7 @@ export const OUTFITS = {
   "female-saree": {
     label: "saree",
     gender: "female",
-    preset: "/outfit-presets/female-saree.webp",
+    preset: "/outfit-presets/female-shirt.webp",
     r: "whole outfit shoulders to ankles (saree + blouse)",
     d: "Nivi drape: 5-7 even pleats at navel falling to floor, pallu across torso over left shoulder, loose end behind; natural folds; border along hem and pallu edge; drape per preset",
     f: "saree",
@@ -160,7 +149,7 @@ export const OUTFITS = {
   "female-salwar-suit": {
     label: "salwar suit",
     gender: "female",
-    preset: "/outfit-presets/female-indo-western.webp",
+    preset: "/outfit-presets/female-saree.webp",
     r: "whole outfit shoulders to ankles (kameez, bottoms, dupatta)",
     d: "kameez mid-thigh to knee with side slits, neckline/sleeves/fit per preset; salwar or churidar; dupatta draped per preset",
     f: "kameez; bottoms and dupatta plain solids from fabric palette unless preset shows a matching set",
@@ -171,23 +160,12 @@ export const OUTFITS = {
   "female-lehenga": {
     label: "lehenga",
     gender: "female",
-    preset: "/outfit-presets/female-nehru-jacket.webp",
+    preset: "/outfit-presets/female-indo-western.webp",
     r: "whole outfit shoulders to ankles (skirt, choli, dupatta)",
     d: "full flared floor-length skirt gathered at waist, hem skimming floor; fitted choli; dupatta draped per preset",
     f: "lehenga skirt",
     a: "choli and dupatta in plain solids from fabric palette unless preset shows a matching set",
     s: "pattern even around the skirt; volume as preset, not slim",
-    k: "none extra",
-  },
-  "female-kurta": {
-    label: "kurta set",
-    gender: "female",
-    preset: "/outfit-presets/female-kurta.webp",
-    r: "whole outfit shoulders to ankles (kurta and bottoms)",
-    d: "straight kurta, neckline, sleeves, hem length, and side slits per preset; coordinated straight bottoms",
-    f: "kurta",
-    a: "plain solid bottoms complementing the fabric if none are visible",
-    s: "keep the kurta's original length and fit; bottoms remain visible to the ankles",
     k: "none extra",
   },
 } satisfies Record<string, O>;
@@ -208,5 +186,6 @@ SPECIFIC RULES: ${outfit.s}
 KEEP EXACTLY (colour, print, fit, folds, position): all other clothing and items, including ${keptItems}. Do not restyle, recolour, tuck/untuck, or invent cropped items.
 FABRIC: true colour and texture; print at realistic scale, grain-aligned, matched at seams; natural drape, folds, stitching.
 PERSON/SCENE: keep face, skin tone, hair, body shape, pose, hands, camera angle, background, lighting, framing unchanged; no beautifying. Garment fits the real body with correct occlusion and shadows.
+COMPLETENESS: finish every selected garment component from its actual neckline or waistband to its natural cuff and hem. Apply the supplied fabric continuously over every intended panel; no accidental original-garment strips, partial patches, unfinished edges, or abrupt crops. Preserve intentional openings, layering, and the fabric's true opacity; keep clean, natural seams and hems. Never omit or change a selected garment component.
 OUTPUT: one photorealistic image, same aspect ratio as Image 1. No text, logos, watermark, collage, extra people.`;
 }

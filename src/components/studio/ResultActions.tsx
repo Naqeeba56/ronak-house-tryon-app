@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Trash2 } from "lucide-react";
+import ErrorAlert from "@/components/ui/ErrorAlert";
 
 export function ResultActions({ generationId }: { generationId: string }) {
   const router = useRouter();
@@ -34,7 +35,7 @@ export function ResultActions({ generationId }: { generationId: string }) {
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
-      {error && <p role="alert" className="absolute bottom-3 left-3 right-3 z-10 rounded-lg bg-slate-950/90 p-3 text-sm text-rose-300">{error}</p>}
+      {error && <ErrorAlert description={error} className="absolute bottom-3 left-3 right-3 w-auto sm:w-auto" />}
       {isConfirmingDelete && (
         <div role="presentation" className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
           <section role="alertdialog" aria-modal="true" aria-labelledby="result-delete-title" className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl sm:p-6">
@@ -44,7 +45,6 @@ export function ResultActions({ generationId }: { generationId: string }) {
               <button type="button" onClick={() => setIsConfirmingDelete(false)} disabled={isDeleting} className="min-h-11 rounded-full border border-slate-700 px-4 text-sm font-semibold text-slate-300 hover:text-white disabled:opacity-50">Cancel</button>
               <button type="button" onClick={() => void deleteImage()} disabled={isDeleting} className="min-h-11 rounded-full bg-rose-600 px-4 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-50">{isDeleting ? "Deleting…" : "Delete image"}</button>
             </div>
-            {error && <p role="alert" className="mt-3 text-sm text-rose-300">{error}</p>}
           </section>
         </div>
       )}

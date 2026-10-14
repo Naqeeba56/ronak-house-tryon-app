@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowRight, Check, ChevronLeft, ChevronRight, LockKeyhole, Sparkles } from "lucide-react";
-import { GARMENT_PRESETS } from "@/lib/constants";
+import { GARMENT_PRESETS, TRY_ON_MODEL_PRESETS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import Footer from "@/components/layout/Footer";
 
@@ -27,7 +27,9 @@ export default function HomeExperience() {
     (outfit) => (outfit.gender ?? "male") === selectedGender,
   );
   const selectedOutfitPreset = outfits.find((outfit) => outfit.label === selectedOutfit) ?? outfits[0];
-  const outfitPreview = selectedOutfitPreset.thumbnails?.[selectedGender] ?? "/models/default-male-tailored.webp";
+  const outfitPreview = selectedOutfitPreset.thumbnails?.[selectedGender]
+    ?? TRY_ON_MODEL_PRESETS.find(({ gender }) => gender === selectedGender)?.imageUrl
+    ?? TRY_ON_MODEL_PRESETS[0].imageUrl;
 
   useEffect(() => {
     const supabase = createClient();
@@ -84,7 +86,11 @@ export default function HomeExperience() {
             </button>
             <Link
               href="#how-it-works"
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-slate-800 bg-slate-900/70 px-6 text-sm font-semibold text-slate-200 transition hover:border-slate-700 hover:bg-slate-900 sm:w-auto"
+              onClick={(event) => {
+                event.preventDefault();
+                document.querySelector("#how-it-works")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-slate-800 bg-slate-900/70 px-6 text-sm font-semibold text-slate-200 transition hover:scale-[1.02] hover:border-slate-700 hover:bg-slate-900 active:scale-[0.98] sm:w-auto"
             >
               See how it works
               <ArrowDown className="h-4 w-4" />
@@ -132,7 +138,7 @@ export default function HomeExperience() {
                     src={outfitPreview}
                     alt={`${selectedGender} model wearing ${selectedOutfitPreset.label}`}
                     fill
-                    priority
+                    preload
                     className="object-contain"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 600px"
                   />
@@ -209,12 +215,19 @@ export default function HomeExperience() {
               { number: "01", title: "Add your photos", text: "Upload a photo of yourself and the outfit you want to try." },
               { number: "02", title: "Choose your style", text: "Browse outfit ideas made for your selected category." },
               { number: "03", title: "See your look", text: "Generate your try-on, then download it or find it in your Library." },
-            ].map((step) => (
-              <li key={step.number} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6 transition hover:-translate-y-1 hover:border-indigo-400/40">
+            ].map((step, index) => (
+              <motion.li
+                key={step.number}
+                initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: reduceMotion ? 0 : 0.55, delay: reduceMotion ? 0 : index * 0.12, ease: [0.16, 1, 0.3, 1] }}
+                className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6 transition hover:-translate-y-1 hover:border-indigo-400/40 hover:shadow-lg hover:shadow-indigo-950/20"
+              >
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/10 text-sm font-bold text-indigo-300">{step.number}</span>
                 <h3 className="mt-5 text-lg font-semibold text-white">{step.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-400">{step.text}</p>
-              </li>
+              </motion.li>
             ))}
           </ol>
           <div className="mt-10 flex flex-col items-center justify-between gap-5 rounded-3xl border border-indigo-400/15 bg-indigo-500/5 p-6 sm:flex-row sm:p-8">

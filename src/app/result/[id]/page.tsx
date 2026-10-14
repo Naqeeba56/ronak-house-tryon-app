@@ -1,8 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ResultActions } from "@/components/studio/ResultActions";
 import ImagePreview from "@/components/library/ImagePreview";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Your Try-On Result",
+  robots: { index: false, follow: false },
+};
 
 export default async function ResultPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

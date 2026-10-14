@@ -49,6 +49,292 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+.vton-studio-canvas {
+  background-color: var(--vton-canvas);
+  background-image:
+    radial-gradient(ellipse at 50% 18%, color-mix(in srgb, var(--vton-accent) 8%, transparent), transparent 58%),
+    linear-gradient(145deg, var(--vton-surface-raised), var(--vton-surface));
+}
+
+.vton-spinner {
+  position: relative;
+  width: 6.25rem;
+  height: 6.25rem;
+  box-sizing: border-box;
+  border: 0;
+  border-top: 5px solid #e74c3c;
+  border-radius: 50%;
+  animation: vton-spinner-rotate 2s linear infinite;
+}
+
+.vton-spinner::before,
+.vton-spinner::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-top: 5px solid;
+  border-radius: 50%;
+  content: "";
+}
+
+.vton-spinner::before {
+  border-top-color: #e67e22;
+  transform: rotate(120deg);
+}
+
+.vton-spinner::after {
+  border-top-color: #3498db;
+  transform: rotate(240deg);
+}
+
+.vton-spinner > span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--vton-foreground);
+  font-family: var(--font-inter), sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  animation: vton-spinner-counter-rotate 2s linear infinite;
+}
+
+.vton-line-loader {
+  position: relative;
+  display: inline-block;
+  width: 1.5rem;
+  height: 0.125rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.vton-line-loader::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  content: "";
+  transform: translateX(-100%);
+  animation: vton-line-trace 1.1s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.vton-google-button {
+  position: relative;
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  gap: 0.625rem;
+  border: 2px solid #000;
+  border-radius: 9999px;
+  background: #fff;
+  padding: 0.625rem 1rem;
+  color: #111;
+  font-weight: 700;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.vton-google-button:focus-visible {
+  border-color: #4285f4;
+  box-shadow: 0 0 0 3px rgb(66 133 244 / 30%);
+}
+
+.vton-google-button:not(:disabled):active {
+  transform: scale(0.985);
+}
+
+.vton-google-button:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+.vton-google-button-icon {
+  z-index: 6;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.vton-google-button-text {
+  z-index: 10;
+  font-size: 0.875rem;
+  transition: color 160ms ease;
+}
+
+.vton-google-button:not(:disabled):hover .vton-google-button-text {
+  color: #fff;
+  animation: vton-google-text 300ms forwards;
+}
+
+.vton-google-button:not(:disabled)::before,
+.vton-google-button:not(:disabled)::after {
+  position: absolute;
+  top: 50%;
+  left: 9%;
+  width: 0;
+  height: 0;
+  border-radius: 9999px;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.vton-google-button:not(:disabled):hover::before {
+  animation: vton-google-wave-one 2.5s ease-in-out forwards;
+}
+
+.vton-google-button:not(:disabled):hover::after {
+  animation: vton-google-wave-two 2.5s ease-in-out forwards;
+}
+
+.error-alert {
+  border: 1px solid var(--error-border);
+  background: var(--error-surface);
+  color: var(--error-foreground);
+}
+
+.error-alert-icon {
+  background: var(--error-icon-surface);
+  color: var(--error-accent);
+}
+
+.error-alert-title {
+  color: var(--error-title);
+}
+
+.error-alert-description {
+  color: var(--error-description);
+}
+
+.error-alert-dismiss {
+  color: var(--error-description);
+}
+
+.error-alert-dismiss:hover {
+  background: var(--error-dismiss-hover);
+  color: var(--error-title);
+}
+
+@keyframes vton-google-text {
+  to { color: #fff; }
+}
+
+@keyframes vton-google-wave-one {
+  0%, 1% { z-index: 1; width: 0; height: 0; background: #eb4335; opacity: 1; }
+  25% { z-index: 1; width: 50rem; height: 50rem; background: #eb4335; opacity: 1; }
+  26% { z-index: 3; width: 0; height: 0; background: #34a853; opacity: 1; }
+  50%, 70%, 100% { z-index: 3; width: 50rem; height: 50rem; background: #34a853; opacity: 1; }
+}
+
+@keyframes vton-google-wave-two {
+  0%, 11% { z-index: 2; width: 0; height: 0; background: #fbbc05; opacity: 1; }
+  35%, 39% { z-index: 2; width: 50rem; height: 50rem; background: #fbbc05; opacity: 1; }
+  40% { z-index: 4; width: 0; height: 0; background: #4285f4; opacity: 1; }
+  64%, 100% { z-index: 4; width: 50rem; height: 50rem; background: #4285f4; opacity: 1; }
+}
+
+.vton-generation-overlay {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: rgb(9 9 11 / 48%);
+}
+
+.vton-generation-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem;
+  text-align: center;
+}
+
+.vton-generating-loader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 5rem;
+  width: min(100%, 17rem);
+  font-family: var(--font-inter), sans-serif;
+  font-size: clamp(1.45rem, 6vw, 1.8rem);
+  font-weight: 600;
+  user-select: none;
+  color: #fff;
+}
+
+.vton-generating-letter {
+  display: inline-block;
+  opacity: 0;
+  animation: vton-generating-letter 4s infinite linear;
+  z-index: 2;
+}
+
+.vton-generating-letter:nth-child(1) { animation-delay: 0.1s; }
+.vton-generating-letter:nth-child(2) { animation-delay: 0.205s; }
+.vton-generating-letter:nth-child(3) { animation-delay: 0.31s; }
+.vton-generating-letter:nth-child(4) { animation-delay: 0.415s; }
+.vton-generating-letter:nth-child(5) { animation-delay: 0.521s; }
+.vton-generating-letter:nth-child(6) { animation-delay: 0.626s; }
+.vton-generating-letter:nth-child(7) { animation-delay: 0.731s; }
+.vton-generating-letter:nth-child(8) { animation-delay: 0.837s; }
+.vton-generating-letter:nth-child(9) { animation-delay: 0.942s; }
+.vton-generating-letter:nth-child(10) { animation-delay: 1.047s; }
+
+.vton-generating-scan {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background-color: transparent;
+  mask: repeating-linear-gradient(90deg, transparent 0, transparent 6px, #000 7px, #000 8px);
+  pointer-events: none;
+}
+
+.vton-generating-scan::after {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 50% 50%, #ff0 0%, transparent 50%),
+    radial-gradient(circle at 45% 45%, #f00 0%, transparent 45%),
+    radial-gradient(circle at 55% 55%, #0ff 0%, transparent 45%),
+    radial-gradient(circle at 45% 55%, #0f0 0%, transparent 45%),
+    radial-gradient(circle at 55% 45%, #00f 0%, transparent 45%);
+  mask: radial-gradient(circle at 50% 50%, transparent 0, transparent 10%, #000 25%);
+  content: "";
+  animation: vton-generating-scan 2s infinite alternate, vton-generating-pulse 4s infinite;
+  animation-timing-function: cubic-bezier(0.6, 0.8, 0.5, 1);
+}
+
+@keyframes vton-generating-scan {
+  from { transform: translateX(-55%); }
+  to { transform: translateX(55%); }
+}
+
+@keyframes vton-generating-pulse {
+  0%, 100% { opacity: 0; }
+  15% { opacity: 1; }
+  65% { opacity: 0; }
+}
+
+@keyframes vton-generating-letter {
+  0%, 100% { opacity: 0; }
+  5% { opacity: 1; text-shadow: 0 0 4px #fff; transform: scale(1.1) translateY(-2px); }
+  20% { opacity: 0.2; }
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -183,6 +469,14 @@ html[data-theme="light"] {
   --vton-glass-foreground: #18181b;
   --vton-shadow: 0 10px 25px -5px rgb(0 0 0 / 10%);
   --vton-canvas-glow: rgb(139 92 246 / 8%);
+  --error-surface: #fff1f2;
+  --error-border: #fecdd3;
+  --error-foreground: #881337;
+  --error-icon-surface: #ffe4e6;
+  --error-accent: #be123c;
+  --error-title: #881337;
+  --error-description: #9f1239;
+  --error-dismiss-hover: #fecdd3;
 }
 
 html[data-theme="dark"] {
@@ -222,6 +516,14 @@ html[data-theme="dark"] {
   --vton-glass-foreground: #fafafa;
   --vton-shadow: 0 10px 35px -12px rgb(0 0 0 / 55%);
   --vton-canvas-glow: rgb(168 85 247 / 10%);
+  --error-surface: #232531;
+  --error-border: rgb(255 255 255 / 8%);
+  --error-foreground: #f4f4f5;
+  --error-icon-surface: rgb(255 255 255 / 5%);
+  --error-accent: #d65563;
+  --error-title: #fff;
+  --error-description: #a1a1aa;
+  --error-dismiss-hover: rgb(255 255 255 / 10%);
 }
 
 html[data-theme="light"] [class~="text-white"]:not([class~="vton-primary"]) {
@@ -293,9 +595,12 @@ html[data-theme="light"] .media-overlay [class*="bg-slate-950/"] {
   position: fixed;
   z-index: 100;
   inset: 0;
-  display: grid;
-  align-content: center;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  box-sizing: border-box;
   padding: 1.5rem;
   background: color-mix(in srgb, var(--vton-canvas) 72%, transparent);
   color: var(--vton-foreground);
@@ -305,55 +610,22 @@ html[data-theme="light"] .media-overlay [class*="bg-slate-950/"] {
   animation: vton-navigation-appear 160ms ease-out both;
 }
 
-.vton-navigation-loader {
-  position: relative;
+.vton-route-loading {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
   display: grid;
-  width: 6.5rem;
-  height: 6.5rem;
+  min-height: 100dvh;
   place-items: center;
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--vton-border);
-  border-radius: 2rem;
-  background: var(--vton-glass);
-  box-shadow: 0 0 60px color-mix(in srgb, var(--vton-accent) 18%, transparent), var(--vton-shadow);
-}
-
-.vton-loader-orbit {
-  position: absolute;
-  border: 1px solid color-mix(in srgb, var(--vton-accent) 35%, transparent);
-  border-radius: 50%;
-  animation: vton-loader-orbit 2.8s linear infinite;
-}
-
-.vton-loader-orbit-outer {
-  inset: 0.45rem;
-}
-
-.vton-loader-orbit-inner {
-  inset: 0.9rem;
-  border-style: dashed;
-  animation-direction: reverse;
-  animation-duration: 4s;
-}
-
-.vton-loader-sparkle {
-  width: 1.6rem;
-  height: 1.6rem;
-  color: var(--vton-accent);
-  animation: vton-loader-sparkle 1.8s ease-in-out infinite;
-}
-
-.vton-loader-spinner {
-  position: absolute;
-  top: 0.45rem;
-  right: 0.45rem;
-  width: 1.1rem;
-  height: 1.1rem;
-  color: var(--vton-accent);
-  animation: vton-loader-orbit 1.2s linear infinite;
+  box-sizing: border-box;
+  padding: 1.5rem;
+  background: color-mix(in srgb, var(--vton-canvas) 94%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 .vton-navigation-title {
+  margin-top: 1.5rem;
   font-family: var(--font-syne), sans-serif;
   font-size: 1.25rem;
   font-weight: 600;
@@ -441,6 +713,10 @@ html[data-theme="light"] .media-overlay [class*="bg-slate-950/"] {
     transform: scale(1.01);
     background: #222222;
     box-shadow: 0 10px 25px -5px rgb(0 0 0 / 10%);
+  }
+
+  .vton-primary:active:not(:disabled) {
+    transform: scale(0.98);
   }
 
   html[data-theme="dark"] .vton-primary {
@@ -626,13 +902,16 @@ html[data-theme="light"] .media-overlay [class*="bg-slate-950/"] {
   to { opacity: 1; }
 }
 
-@keyframes vton-loader-orbit {
+@keyframes vton-line-trace {
+  100% { transform: translateX(100%); }
+}
+
+@keyframes vton-spinner-rotate {
   to { transform: rotate(360deg); }
 }
 
-@keyframes vton-loader-sparkle {
-  0%, 100% { opacity: 0.72; transform: scale(0.92); }
-  50% { opacity: 1; transform: scale(1.08); }
+@keyframes vton-spinner-counter-rotate {
+  to { transform: rotate(-360deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -640,9 +919,11 @@ html[data-theme="light"] .media-overlay [class*="bg-slate-950/"] {
   .vton-generating::before,
   .vton-skeleton,
   .vton-navigation-loading,
-  .vton-loader-orbit,
-  .vton-loader-sparkle,
-  .vton-loader-spinner {
+  .vton-spinner,
+  .vton-spinner > span,
+  .vton-generating-letter,
+  .vton-generating-scan::after,
+  .vton-line-loader::after {
     animation: none;
   }
 }

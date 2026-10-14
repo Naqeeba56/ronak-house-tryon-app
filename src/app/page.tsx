@@ -4,7 +4,7 @@ import { siteUrl } from "@/lib/site-url";
 
 const homeTitle = "AI Virtual Try-On for Sarees, Lehengas & More";
 const homeDescription =
-  "Preview sarees, lehengas, kurtas, and more with a private AI virtual try-on. Upload your photo and fabric to explore your next look.";
+  "Preview sarees, salwar suits, lehengas, and more with a private AI virtual try-on. Upload your photo and fabric to explore your next look.";
 const homeUrl = new URL("/", siteUrl).toString();
 
 export const metadata: Metadata = {
@@ -45,7 +45,7 @@ export default function HomePage() {
         description: homeDescription,
         featureList: [
           "AI virtual try-on using a personal photo and fabric image",
-          "Saree, lehenga, and kurta outfit previews",
+          "Saree, salwar suit, lehenga, and kurta outfit previews",
           "Private saved try-on library",
         ],
       },
