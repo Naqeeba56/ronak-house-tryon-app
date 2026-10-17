@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { APP_ADMIN_EMAIL } from "@/lib/constants";
+import BrandLogo from "@/components/layout/BrandLogo";
 import AuthModal from "@/components/auth/AuthModal";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 
@@ -49,9 +50,8 @@ export default function Navbar() {
     <>
     <header className="sticky top-0 z-40 bg-slate-950/90 px-2 pt-2 text-slate-200 backdrop-blur-xl sm:px-6 sm:pt-3">
       <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-2 rounded-full border border-slate-800 bg-slate-900/95 px-2.5 shadow-lg shadow-slate-950/5 sm:min-h-16 sm:gap-3 sm:px-5">
-        <Link href="/" className="group flex min-w-0 shrink items-center gap-1.5 rounded-full text-sm font-bold tracking-tight text-white transition-colors hover:text-[#7e22ce] sm:gap-2 sm:text-lg">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/15"><Sparkles className="h-4 w-4 text-indigo-400" /></span>
-          <span className="vton-heading truncate">Ronak House<span className="text-indigo-400 group-hover:text-[#7e22ce]"> TryON</span></span>
+        <Link href="/" aria-label="VTON Labs home" className="flex min-w-0 shrink items-center rounded-full">
+          <BrandLogo priority />
         </Link>
 
         <nav aria-label="Main navigation" className="hidden items-center gap-1 rounded-full bg-slate-950/60 p-1 text-sm font-medium md:flex">

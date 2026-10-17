@@ -6,7 +6,7 @@ import ProfileExperience from "@/components/profile/ProfileExperience";
 
 export const metadata: Metadata = {
   title: "Your Account",
-  description: "Manage your Ronak House TryON profile, balance, and saved looks.",
+  description: "Manage your VTON Labs profile, balance, and saved looks.",
   robots: { index: false, follow: false },
 };
 

@@ -1,10 +1,15 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
-export const alt = "Ronak House TryON — preview outfits before you buy";
+export const alt = "VTON Labs — preview outfits before you buy";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function OpenGraphImage() {
+export default async function OpenGraphImage() {
+  const logo = await readFile(join(process.cwd(), "public", "brand", "vton-labs-logo-dark.png"));
+  const logoData = `data:image/png;base64,${logo.toString("base64")}`;
+
   return new ImageResponse(
     (
       <div
@@ -20,23 +25,10 @@ export default function OpenGraphImage() {
           fontFamily: "Arial, sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <div
-            style={{
-              width: "48px",
-              height: "48px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: "16px",
-              background: "#3d7bf0",
-              fontSize: "28px",
-              fontWeight: 700,
-            }}
-          >
-            F
-          </div>
-          <span style={{ fontSize: "26px", fontWeight: 700 }}>Ronak House TryON</span>
+        <div style={{ display: "flex", alignItems: "center", height: "96px" }}>
+          {/* Satori requires a plain img for embedded assets in generated images. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logoData} alt="VTON Labs" width={384} height={96} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
           <div

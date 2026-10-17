@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowRight, Check, ChevronLeft, ChevronRight, LockKeyhole, Sparkles } from "lucide-react";
 import { GARMENT_PRESETS, TRY_ON_MODEL_PRESETS } from "@/lib/constants";
+import { HOME_OUTFIT_PREVIEWS } from "@/lib/home-outfit-previews";
 import { createClient } from "@/lib/supabase/client";
 import Footer from "@/components/layout/Footer";
 
@@ -27,7 +28,8 @@ export default function HomeExperience() {
     (outfit) => (outfit.gender ?? "male") === selectedGender,
   );
   const selectedOutfitPreset = outfits.find((outfit) => outfit.label === selectedOutfit) ?? outfits[0];
-  const outfitPreview = selectedOutfitPreset.thumbnails?.[selectedGender]
+  const outfitPreview = HOME_OUTFIT_PREVIEWS[`${selectedGender}:${selectedOutfitPreset.label}`]
+    ?? selectedOutfitPreset.thumbnails?.[selectedGender]
     ?? TRY_ON_MODEL_PRESETS.find(({ gender }) => gender === selectedGender)?.imageUrl
     ?? TRY_ON_MODEL_PRESETS[0].imageUrl;
 
@@ -139,7 +141,7 @@ export default function HomeExperience() {
                     alt={`${selectedGender} model wearing ${selectedOutfitPreset.label}`}
                     fill
                     preload
-                    className="object-contain"
+                    className="object-cover"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 600px"
                   />
                 </motion.div>

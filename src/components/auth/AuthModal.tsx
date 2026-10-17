@@ -51,7 +51,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <div className="inline-flex p-3 rounded-xl bg-indigo-600/20 text-indigo-400 mb-3">
             <Sparkles className="w-6 h-6" />
           </div>
-          <h2 id="auth-modal-title" className="text-xl font-bold text-white">Welcome to Ronak House TryON</h2>
+          <h2 id="auth-modal-title" className="text-xl font-bold text-white">Welcome to VTON Labs</h2>
           <p className="text-xs text-slate-400 mt-1">Sign in or create your account securely with Google.</p>
         </div>
 
@@ -76,7 +76,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </svg>
           <span className="vton-google-button-text">{loading ? "Connecting..." : "Continue with Google"}</span>
         </button>
-        <p className="mt-4 text-center text-[11px] leading-5 text-slate-500">Google manages your sign-in securely. No passwords or email forms are stored by Ronak House TryON.</p>
+        <p className="mt-4 text-center text-[11px] leading-5 text-slate-500">Google manages your sign-in securely. No passwords or email forms are stored by VTON Labs.</p>
       </motion.div>
     </motion.div>}
     </AnimatePresence>,

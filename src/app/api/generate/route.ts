@@ -1,12 +1,10 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { NextResponse } from "next/server";
 import sharp from "sharp";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { APP_ADMIN_EMAIL, GARMENT_PRESETS, TRY_ON_MODEL_PRESETS } from "@/lib/constants";
 import { buildTryOnPrompt, OUTFITS, type OutfitKey } from "@/lib/outfit-prompts";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { createTryOnImageUrl, storeMaskedTryOn } from "@/lib/supabase/try-on-images";
+import { createTryOnImageUrl, storeGeneratedTryOn } from "@/lib/supabase/try-on-images";
 
 const MAX_IMAGE_DATA_URL_LENGTH = 4_000_000;
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
@@ -32,7 +30,6 @@ type GenerateRequest = {
   garmentType?: string;
   garmentImage?: string;
   modelImage?: string;
-  maskImage?: string;
   modelPresetId?: string;
   modelGender?: "male" | "female";
 };
@@ -84,22 +81,6 @@ async function validateImageDataUrl(value: unknown): Promise<ValidatedImage | un
   }
 
   return { bytes, mimeType };
-}
-
-async function loadStyleReference(presetPath: string) {
-  const presetBytes = await readFile(join(process.cwd(), "public", presetPath.slice(1)));
-  if (!presetBytes.length || presetBytes.length > MAX_IMAGE_BYTES) {
-    throw new Error("The selected outfit style reference is too large.");
-  }
-  const metadata = await sharp(presetBytes).metadata();
-  if (!metadata.format || !["jpeg", "png", "webp"].includes(metadata.format)) {
-    throw new Error("The selected outfit style reference is not a supported image.");
-  }
-  const jpegBytes = await sharp(presetBytes).greyscale().jpeg().toBuffer();
-  if (!jpegBytes.length || jpegBytes.length > MAX_IMAGE_BYTES) {
-    throw new Error("The selected outfit style reference is too large.");
-  }
-  return `data:image/jpeg;base64,${jpegBytes.toString("base64")}`;
 }
 
 function getImageUrl(message: ChatMessage) {
@@ -186,35 +167,20 @@ export async function POST(request: Request) {
   if (!outfitKey || OUTFITS[outfitKey].gender !== selectedGender) {
     return NextResponse.json({ error: "Choose a valid outfit for the selected model category." }, { status: 400 });
   }
-  const outfit = OUTFITS[outfitKey];
-
   if (!body.modelImage) {
     return NextResponse.json({ error: "Choose a male or female model preset, or upload a model image." }, { status: 400 });
   }
 
-  const [modelImage, fabricImage, editMask] = await Promise.all([
+  const [modelImage, fabricImage] = await Promise.all([
     validateImageDataUrl(body.modelImage),
     validateImageDataUrl(body.garmentImage),
-    validateImageDataUrl(body.maskImage),
   ]);
   if (!modelImage) {
     return NextResponse.json({ error: "Upload a valid PNG, JPG, or WebP model image under 3 MB." }, { status: 400 });
   }
   if (!fabricImage) {
-    return NextResponse.json({ error: "Upload a valid PNG, JPG, or WebP garment image under 3 MB." }, { status: 400 });
+    return NextResponse.json({ error: "Upload a valid PNG, JPG, or WebP fabric image under 3 MB." }, { status: 400 });
   }
-  if (!editMask || editMask.mimeType !== "image/png") {
-    return NextResponse.json({ error: "Could not prepare a valid outfit edit mask. Please try again." }, { status: 400 });
-  }
-  const maskImageDataUrl = `data:${editMask.mimeType};base64,${editMask.bytes.toString("base64")}`;
-
-  let styleReference: string;
-  try {
-    styleReference = await loadStyleReference(outfit.preset);
-  } catch {
-    return NextResponse.json({ error: "The selected outfit style reference is unavailable. Please try again later." }, { status: 503 });
-  }
-
   let reservation: TryOnReservation | null = null;
   if (!isAdmin) {
     const { data: reservations, error: reservationError } = await sessionClient.rpc("reserve_tryon_credit", {
@@ -241,8 +207,6 @@ export async function POST(request: Request) {
       { type: "image_url", image_url: { url: `data:${modelImage.mimeType};base64,${modelImage.bytes.toString("base64")}` } },
       { type: "text", text: "Image 2 (FABRIC):" },
       { type: "image_url", image_url: { url: `data:${fabricImage.mimeType};base64,${fabricImage.bytes.toString("base64")}` } },
-      { type: "text", text: "Image 3 (STYLE REFERENCE):" },
-      { type: "image_url", image_url: { url: styleReference } },
       { type: "text", text: buildTryOnPrompt(outfitKey) },
     ];
     let outputUrl: string | undefined;
@@ -277,10 +241,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const stored = await storeMaskedTryOn(sessionClient, user.id, outputUrl, {
-      sourceImageDataUrl: `data:${modelImage.mimeType};base64,${modelImage.bytes.toString("base64")}`,
-      maskImageDataUrl,
-    });
+    const stored = await storeGeneratedTryOn(
+      sessionClient,
+      user.id,
+      outputUrl,
+      `data:${modelImage.mimeType};base64,${modelImage.bytes.toString("base64")}`,
+    );
     storagePath = stored.storagePath;
 
     const { data: generation, error: insertError } = await sessionClient

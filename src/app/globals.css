@@ -526,6 +526,37 @@ html[data-theme="dark"] {
   --error-dismiss-hover: rgb(255 255 255 / 10%);
 }
 
+.vton-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  flex: none;
+}
+
+.vton-brand-logo-image {
+  display: none;
+  width: 176px;
+  height: 44px;
+  flex: none;
+  object-fit: contain;
+}
+
+html[data-theme="light"] .vton-brand-logo-image-light,
+html[data-theme="dark"] .vton-brand-logo-image-dark {
+  display: block;
+}
+
+@media (max-width: 639px) {
+  .vton-brand-logo {
+    height: 36px;
+  }
+
+  .vton-brand-logo-image {
+    width: 144px;
+    height: 36px;
+  }
+}
+
 html[data-theme="light"] [class~="text-white"]:not([class~="vton-primary"]) {
   color: #18181b;
 }

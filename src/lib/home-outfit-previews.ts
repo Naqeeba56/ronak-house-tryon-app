@@ -1,0 +1,16 @@
+export const HOME_OUTFIT_PREVIEWS: Readonly<Record<string, string>> = {
+  "male:Shirt": "/models/studio-male-model-v2.webp",
+  "male:Pant": "/models/studio-male-model-v2.webp",
+  "male:Indo-Western Jacket": "/models/studio-male-model-v2.webp",
+  "male:2-Piece Suit": "/models/studio-male-model-v2.webp",
+  "male:3-Piece Suit": "/models/studio-male-model-v2.webp",
+  "male:Blazer": "/models/studio-male-model-v2.webp",
+  "male:Nehru Jacket": "/models/studio-male-model-v2.webp",
+  "male:Sherwani": "/models/studio-male-model-v2.webp",
+  "male:Kurta": "/models/studio-male-model-v2.webp",
+  "male:Pathani": "/models/studio-male-model-v2.webp",
+  "male:Jodhpuri suit": "/models/studio-male-model-v2.webp",
+  "female:Saree": "/home-outfit-previews/women-saree.webp",
+  "female:Salwar suit": "/home-outfit-previews/women-salwar.webp",
+  "female:Lehenga": "/home-outfit-previews/women-lehenga.webp",
+};

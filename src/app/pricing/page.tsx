@@ -7,11 +7,11 @@ import { siteUrl } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   title: "Try-On Plans & Pricing",
-  description: "Compare Ronak House TryON plans and choose the right number of private AI outfit generations for your style.",
+  description: "Compare VTON Labs plans and choose the right number of private AI outfit generations for your style.",
   alternates: { canonical: new URL("/pricing", siteUrl).toString() },
   openGraph: {
     title: "Try-On Plans & Pricing",
-    description: "Compare Ronak House TryON plans and choose the right number of private AI outfit generations for your style.",
+    description: "Compare VTON Labs plans and choose the right number of private AI outfit generations for your style.",
     url: new URL("/pricing", siteUrl).toString(),
   },
 };

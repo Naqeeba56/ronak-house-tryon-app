@@ -3,8 +3,9 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import AuthModal from "@/components/auth/AuthModal";
+import BrandLogo from "@/components/layout/BrandLogo";
 import { APP_ADMIN_EMAIL } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 
@@ -46,9 +47,9 @@ export default function Footer() {
       <footer className="border-t border-slate-800 bg-slate-950 px-4 py-8 text-slate-400 sm:px-6 sm:py-12">
         <div className="mx-auto grid max-w-7xl gap-7 sm:gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
-            <Link href="/" className="flex items-center gap-2 text-lg font-bold text-white transition-transform hover:scale-[1.01]"><Sparkles className="h-5 w-5 text-indigo-400" /> Ronak House <span className="text-indigo-400">TryON</span></Link>
+            <Link href="/" aria-label="VTON Labs home" className="inline-flex items-center transition-transform hover:scale-[1.01]"><BrandLogo /></Link>
             <p className="mt-4 max-w-xs text-sm leading-6">Preview your fabrics and outfits with a private virtual try-on.</p>
-            <p className="mt-4 text-xs text-slate-600 sm:mt-6">© 2026 Ronak House TryON. Built for better fitting ideas.</p>
+            <p className="mt-4 text-xs text-slate-600 sm:mt-6">© 2026 VTON Labs. Built for better fitting ideas.</p>
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Product</p>
@@ -64,7 +65,7 @@ export default function Footer() {
             <div className="mt-4 grid gap-3 text-sm">
               <Link href="/profile" onClick={requireAuth} className="transition hover:text-white">Profile &amp; billing</Link>
               {!user && <button type="button" onClick={() => setIsAuthOpen(true)} className="text-left transition hover:text-white">Sign in</button>}
-              <a href="mailto:support@ronakhouse.com?subject=Ronak%20House%20TryON%20Support" target="_blank" rel="noopener noreferrer" className="transition hover:text-white">Contact support</a>
+              <a href="mailto:support@ronakhouse.com?subject=VTON%20Labs%20Support" target="_blank" rel="noopener noreferrer" className="transition hover:text-white">Contact support</a>
             </div>
           </div>
           <div className="border-t border-slate-800 pt-5 md:border-l md:border-t-0 md:pl-6 md:pt-0">

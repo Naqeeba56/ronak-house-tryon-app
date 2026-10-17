@@ -1,0 +1,34 @@
+Homepage outfit preview photos
+
+The following source images were downloaded from Pexels and are used under the
+Pexels license: https://www.pexels.com/license/
+The Pexels license permits use and modification in websites and applications;
+attribution is not required. These previews are local, optimized WebP copies.
+
+men-casual.webp
+  Pexels photo ID 7288892
+  Source search: https://www.pexels.com/search/indian-male-fashion-model/
+
+men-kurta.webp
+  Pexels photo ID 7956933
+  Source search: https://www.pexels.com/search/indian-male-kurta-model-standing/
+
+men-formal.webp
+  Pexels photo ID 16325764
+  Source search: https://www.pexels.com/search/indian-man-suit-model/
+
+men-sherwani.webp
+  Pexels photo ID 10870286
+  Source search: https://www.pexels.com/search/indian-groom-fashion-model/
+
+women-saree.webp
+  Pexels photo ID 17503287
+  Source search: https://www.pexels.com/search/indian-woman-designer-saree-model/
+
+women-salwar.webp
+  Pexels photo ID 19271174
+  Source search: https://www.pexels.com/search/indian-salwar-suit-model/
+
+women-lehenga.webp
+  Pexels photo ID 28405815
+  Source search: https://www.pexels.com/search/indian-woman-lehenga/

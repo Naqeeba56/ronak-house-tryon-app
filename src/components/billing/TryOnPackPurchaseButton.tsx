@@ -147,7 +147,7 @@ export default function TryOnPackPurchaseButton({
         key: order.keyId,
         amount: order.amount,
         currency: order.currency,
-        name: "FabricFit AI",
+        name: "VTON Labs",
         description: `${order.tryonCount ?? TRYON_PLANS[planId].tryonCount} virtual try-ons`,
         order_id: order.orderId,
         prefill: { name: order.name ?? "", email: order.email ?? "" },

@@ -21,7 +21,6 @@ import {
 const AuthModal = dynamic(() => import("@/components/auth/AuthModal"), { loading: () => null });
 
 type UploadedImage = { name: string; dataUrl: string };
-type TryOnRegion = (typeof GARMENT_PRESETS)[number]["region"];
 type GenerateResponse = {
   outputUrl?: string;
   generationId?: string;
@@ -63,109 +62,6 @@ async function fetchPresetImage(imageUrl: string) {
     throw new Error("The selected model preset is not a supported image.");
   }
   return readImage(image);
-}
-
-async function createTryOnMask(region: TryOnRegion, modelImageUrl: string) {
-  const modelImageElement = new window.Image();
-  modelImageElement.src = modelImageUrl;
-  await new Promise<void>((resolve, reject) => {
-    modelImageElement.onload = () => resolve();
-    modelImageElement.onerror = () => reject(new Error("Could not prepare an edit mask for this model photo."));
-  });
-  const canvas = document.createElement("canvas");
-  canvas.width = modelImageElement.naturalWidth;
-  canvas.height = modelImageElement.naturalHeight;
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Could not prepare the selected outfit area.");
-
-  context.fillStyle = "#000";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  const scale = Math.min(canvas.width / 512, canvas.height / 768);
-  context.translate((canvas.width - 512 * scale) / 2, (canvas.height - 768 * scale) / 2);
-  context.scale(scale, scale);
-  context.fillStyle = "#fff";
-  context.filter = "blur(2px)";
-
-  const drawUpperBody = (hemY: number) => {
-    context.beginPath();
-    context.moveTo(220, 172);
-    context.quadraticCurveTo(188, 164, 154, 170);
-    context.lineTo(134, 226);
-    context.quadraticCurveTo(128, 258, 142, 300);
-    context.lineTo(154, 410);
-    context.quadraticCurveTo(158, 446, 154, 474);
-    context.lineTo(178, 470);
-    context.lineTo(190, 302);
-    context.quadraticCurveTo(188, 270, 192, 246);
-    context.lineTo(188, hemY - 30);
-    context.quadraticCurveTo(256, hemY, 324, hemY - 30);
-    context.lineTo(320, 246);
-    context.quadraticCurveTo(324, 270, 322, 302);
-    context.lineTo(334, 470);
-    context.lineTo(358, 474);
-    context.quadraticCurveTo(358, 446, 358, 410);
-    context.lineTo(370, 300);
-    context.quadraticCurveTo(384, 258, 378, 226);
-    context.lineTo(358, 170);
-    context.quadraticCurveTo(324, 164, 292, 172);
-    context.quadraticCurveTo(286, 194, 256, 202);
-    context.quadraticCurveTo(226, 194, 220, 172);
-    context.closePath();
-    context.fill();
-  };
-
-  const drawSleevelessUpperBody = (hemY: number) => {
-    context.beginPath();
-    context.moveTo(220, 172);
-    context.quadraticCurveTo(188, 164, 154, 170);
-    context.lineTo(180, 236);
-    context.quadraticCurveTo(186, 250, 188, 278);
-    context.lineTo(188, hemY - 30);
-    context.quadraticCurveTo(256, hemY, 324, hemY - 30);
-    context.lineTo(324, 278);
-    context.quadraticCurveTo(326, 250, 332, 236);
-    context.lineTo(358, 170);
-    context.quadraticCurveTo(324, 164, 292, 172);
-    context.quadraticCurveTo(286, 194, 256, 202);
-    context.quadraticCurveTo(226, 194, 220, 172);
-    context.closePath();
-    context.fill();
-  };
-
-  const drawLowerBody = (waistY: number, hemY: number) => {
-    context.beginPath();
-    context.moveTo(188, waistY);
-    context.quadraticCurveTo(256, waistY - 8, 324, waistY);
-    context.quadraticCurveTo(334, waistY + 54, 318, waistY + 126);
-    context.lineTo(324, hemY);
-    context.lineTo(261, hemY);
-    context.lineTo(256, waistY + 150);
-    context.lineTo(251, hemY);
-    context.lineTo(188, hemY);
-    context.lineTo(194, waistY + 126);
-    context.quadraticCurveTo(178, waistY + 54, 188, waistY);
-    context.closePath();
-    context.fill();
-  };
-
-  if (region === "upper") {
-    drawUpperBody(414);
-  } else if (region === "sleeveless-upper") {
-    drawSleevelessUpperBody(414);
-  } else if (region === "long-upper") {
-    drawUpperBody(530);
-  } else if (region === "long-set") {
-    drawUpperBody(530);
-    drawLowerBody(500, 690);
-  } else if (region === "lower") {
-    drawLowerBody(404, 690);
-  } else {
-    drawUpperBody(414);
-    drawLowerBody(404, 690);
-  }
-  context.filter = "none";
-
-  return canvas.toDataURL("image/png");
 }
 
 function PhotoUploadCard({
@@ -342,7 +238,7 @@ export default function StudioPage() {
       return;
     }
     if ((!modelImage && !selectedModelPreset) || !garmentImage) {
-      setError("Upload a customer photo or choose a sample, then upload a garment photo.");
+      setError("Upload a customer photo or choose a sample, then upload a fabric photo.");
       return;
     }
     if (!isAdmin && (freeRemaining ?? 0) + (packRemaining ?? 0) < 1) {
@@ -360,7 +256,6 @@ export default function StudioPage() {
         : undefined;
       const modelImageDataUrl = modelImage?.dataUrl ?? presetImage;
       if (!modelImageDataUrl) throw new Error("Choose a model photo before generating your try-on.");
-      const maskImage = await createTryOnMask(selectedPreset.region, modelImageDataUrl);
       const startResponse = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -370,7 +265,6 @@ export default function StudioPage() {
           modelPresetId: modelImage ? undefined : selectedModelPreset?.id,
           modelGender: selectedGender,
           garmentImage: garmentImage.dataUrl,
-          maskImage,
         }),
       });
       const generated = (await startResponse.json()) as GenerateResponse;
@@ -401,7 +295,7 @@ export default function StudioPage() {
               <Sparkles className="h-3.5 w-3.5" /> Virtual fitting room
             </p>
             <h1 className="vton-heading mt-3 text-2xl font-semibold tracking-tight text-white sm:mt-4 sm:text-4xl">Make the look yours.</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">Add your photo and an outfit. We’ll create a private try-on preview just for you.</p>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">Add your photo and a fabric swatch. We’ll create a private try-on preview just for you.</p>
           </div>
           <Link href="/library" className="inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-full border border-slate-800 bg-slate-900 px-4 text-sm font-medium text-slate-300 transition hover:border-indigo-400/50 hover:text-white sm:self-auto">
             <ImagePlus className="h-4 w-4" /> My Library
@@ -429,7 +323,7 @@ export default function StudioPage() {
                   }}
                 />
                 <PhotoUploadCard
-                  title="Outfit photo"
+                  title="Fabric photo"
                   image={garmentImage}
                   onRemove={() => setGarmentImage(null)}
                   onChange={(event) => void handleImageUpload(event, setGarmentImage)}

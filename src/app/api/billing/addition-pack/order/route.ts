@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       planId,
       tryonCount: plan.tryonCount,
       planName: plan.name,
-      name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? "FabricFit AI",
+      name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? "VTON Labs",
       email: user.email ?? "",
     });
   } catch {
