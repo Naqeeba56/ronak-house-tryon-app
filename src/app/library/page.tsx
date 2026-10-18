@@ -44,8 +44,8 @@ export default async function LibraryPage() {
 
   return (
     <>
-      <section className="mobile-compact mx-auto min-h-[70vh] max-w-7xl px-4 py-7 text-slate-100 sm:px-8 sm:py-10 lg:px-10 lg:py-14">
-        <header className="mb-6 flex flex-col justify-between gap-4 sm:mb-8 sm:flex-row sm:items-end">
+      <section className="mobile-compact mx-auto min-h-[70vh] max-w-7xl px-3.5 py-5 text-slate-100 sm:px-8 sm:py-10 lg:px-10 lg:py-14">
+        <header className="mb-4 flex flex-col justify-between gap-3 sm:mb-8 sm:flex-row sm:items-end sm:gap-4">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-300">
               <LockKeyhole className="h-3.5 w-3.5" /> Private collection
@@ -58,7 +58,7 @@ export default async function LibraryPage() {
           </Link>
         </header>
 
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/75 px-4 py-3.5 sm:mb-7 sm:px-5 sm:py-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-slate-900/75 px-3 py-3 sm:mb-7 sm:gap-3 sm:px-5 sm:py-4">
           <div><p className="text-sm font-semibold text-white">{libraryUnavailable ? "Library unavailable" : `${images.length} ${images.length === 1 ? "look" : "looks"} saved`}</p><p className="mt-0.5 text-xs text-slate-500">Your try-on collection</p></div>
           <span className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-400">
             <Clock3 className="h-3.5 w-3.5 text-indigo-300" /> Images automatically expire after 30 days

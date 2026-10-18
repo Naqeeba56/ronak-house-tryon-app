@@ -45,7 +45,7 @@ export const GARMENT_PRESETS: readonly GarmentPresetDefinition[] = [
   },
   {
     label: "Pant",
-    description: "full-length tailored trousers",
+    description: "formal full-length tailored trousers, never jeans or denim",
     fabricTarget: "both trouser legs from the waistband to the hems",
     gender: "male",
     thumbnails: { male: "/outfit-presets/male-pant.webp" },
@@ -118,21 +118,21 @@ export const GARMENT_PRESETS: readonly GarmentPresetDefinition[] = [
     description: "a traditional saree with a fitted blouse",
     fabricTarget: "the saree and blouse",
     gender: "female",
-    thumbnails: { female: "/outfit-presets/female-shirt.webp" },
+    thumbnails: { female: "/outfit-presets/female-saree-v2.webp" },
   },
   {
     label: "Salwar suit",
     description: "a traditional salwar suit with kameez, bottoms, and dupatta",
     fabricTarget: "the kameez, coordinated bottoms, and dupatta",
     gender: "female",
-    thumbnails: { female: "/outfit-presets/female-saree.webp" },
+    thumbnails: { female: "/outfit-presets/female-salwar-suit.webp" },
   },
   {
     label: "Lehenga",
     description: "a flared lehenga skirt with choli and dupatta",
     fabricTarget: "the lehenga skirt, choli, and dupatta",
     gender: "female",
-    thumbnails: { female: "/outfit-presets/female-indo-western.webp" },
+    thumbnails: { female: "/outfit-presets/female-lehenga.webp" },
   },
 ] as const;
 

@@ -44,8 +44,8 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="border-t border-slate-800 bg-slate-950 px-4 py-8 text-slate-400 sm:px-6 sm:py-12">
-        <div className="mx-auto grid max-w-7xl gap-7 sm:gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
+      <footer className="border-t border-slate-800 bg-slate-950 px-4 py-6 text-slate-400 sm:px-6 sm:py-12">
+        <div className="mx-auto grid max-w-7xl gap-5 sm:gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
             <Link href="/" aria-label="VTON Labs home" className="inline-flex items-center transition-transform hover:scale-[1.01]"><BrandLogo /></Link>
             <p className="mt-4 max-w-xs text-sm leading-6">Preview your fabrics and outfits with a private virtual try-on.</p>

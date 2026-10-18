@@ -2,9 +2,9 @@ import HomeExperience from "@/components/home/HomeExperience";
 import type { Metadata } from "next";
 import { siteUrl } from "@/lib/site-url";
 
-const homeTitle = "AI Virtual Try-On for Sarees, Lehengas & More | VTON Labs";
+const homeTitle = "Visualize Any Fabric on You Before You Buy or Stitch | VTON Labs";
 const homeDescription =
-  "Preview sarees, salwar suits, lehengas, and more with a private AI virtual try-on. Upload your photo and fabric to explore your next look.";
+  "Transform fabric swatches or outfit ideas into hyper-realistic, custom-fitted looks in seconds with a private AI virtual fitting room.";
 const homeUrl = new URL("/", siteUrl).toString();
 
 export const metadata: Metadata = {

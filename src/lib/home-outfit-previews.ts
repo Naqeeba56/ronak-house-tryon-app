@@ -10,7 +10,7 @@ export const HOME_OUTFIT_PREVIEWS: Readonly<Record<string, string>> = {
   "male:Kurta": "/models/studio-male-model-v2.webp",
   "male:Pathani": "/models/studio-male-model-v2.webp",
   "male:Jodhpuri suit": "/models/studio-male-model-v2.webp",
-  "female:Saree": "/home-outfit-previews/women-saree.webp",
-  "female:Salwar suit": "/home-outfit-previews/women-salwar.webp",
-  "female:Lehenga": "/home-outfit-previews/women-lehenga.webp",
+  "female:Saree": "/outfit-presets/female-saree-v2.webp",
+  "female:Salwar suit": "/outfit-presets/female-salwar-suit.webp",
+  "female:Lehenga": "/outfit-presets/female-lehenga.webp",
 };

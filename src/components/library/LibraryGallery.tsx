@@ -51,7 +51,7 @@ export default function LibraryGallery({ images: initialImages }: { images: Libr
         />
       )}
       {images.length ? (
-        <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
           {images.map((image) => (
             <article key={image.id} className="group overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 transition duration-300 hover:-translate-y-1 hover:border-indigo-400/40 hover:shadow-xl hover:shadow-slate-950/15 sm:rounded-3xl">
               <div className="media-overlay relative aspect-[4/4.5] overflow-hidden bg-slate-950">
@@ -93,7 +93,7 @@ export default function LibraryGallery({ images: initialImages }: { images: Libr
           ))}
         </div>
       ) : (
-        <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/45 px-5 py-16 text-center">
+        <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/45 px-4 py-10 text-center sm:px-5 sm:py-16">
           <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-300"><ImageIcon className="h-6 w-6" /></span>
           <h2 className="mt-5 text-lg font-semibold text-white">Your first look is waiting.</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-400">Create a virtual try-on and it’ll be saved here, ready whenever you need a little inspiration.</p>

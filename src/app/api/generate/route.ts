@@ -3,6 +3,7 @@ import sharp from "sharp";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { APP_ADMIN_EMAIL, GARMENT_PRESETS, TRY_ON_MODEL_PRESETS } from "@/lib/constants";
 import { buildTryOnPrompt, OUTFITS, type OutfitKey } from "@/lib/outfit-prompts";
+import { siteUrl } from "@/lib/site-url";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createTryOnImageUrl, storeGeneratedTryOn } from "@/lib/supabase/try-on-images";
 
@@ -62,6 +63,23 @@ type TryOnReservation = {
 
 type ValidatedImage = { bytes: Buffer; mimeType: "image/png" | "image/jpeg" | "image/webp" };
 
+async function validateImageBytes(
+  bytes: Buffer,
+  mimeType: ValidatedImage["mimeType"],
+): Promise<ValidatedImage | undefined> {
+  if (!bytes.length || bytes.length > MAX_IMAGE_BYTES) return undefined;
+
+  try {
+    const metadata = await sharp(bytes).metadata();
+    const expectedFormat = mimeType === "image/jpeg" ? "jpeg" : mimeType.slice("image/".length);
+    if (metadata.format !== expectedFormat) return undefined;
+  } catch {
+    return undefined;
+  }
+
+  return { bytes, mimeType };
+}
+
 async function validateImageDataUrl(value: unknown): Promise<ValidatedImage | undefined> {
   if (typeof value !== "string" || value.length > MAX_IMAGE_DATA_URL_LENGTH) return undefined;
   const match = value.match(/^data:(image\/(?:png|jpeg|jpg|webp));base64,([a-z0-9+/]+={0,2})$/i);
@@ -72,15 +90,19 @@ async function validateImageDataUrl(value: unknown): Promise<ValidatedImage | un
 
   const inputMimeType = match[1].toLowerCase();
   const mimeType = inputMimeType === "image/jpg" ? "image/jpeg" : inputMimeType as ValidatedImage["mimeType"];
-  try {
-    const metadata = await sharp(bytes).metadata();
-    const expectedFormat = mimeType === "image/jpeg" ? "jpeg" : mimeType.slice("image/".length);
-    if (metadata.format !== expectedFormat) return undefined;
-  } catch {
+  return validateImageBytes(bytes, mimeType);
+}
+
+async function loadOutfitStyleImage(imagePath: string): Promise<ValidatedImage | undefined> {
+  const response = await fetch(new URL(imagePath, siteUrl));
+  if (!response.ok) return undefined;
+
+  const responseMimeType = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
+  if (!responseMimeType || !["image/png", "image/jpeg", "image/webp"].includes(responseMimeType)) {
     return undefined;
   }
-
-  return { bytes, mimeType };
+  const mimeType = (responseMimeType === "image/jpg" ? "image/jpeg" : responseMimeType) as ValidatedImage["mimeType"];
+  return validateImageBytes(Buffer.from(await response.arrayBuffer()), mimeType);
 }
 
 function getImageUrl(message: ChatMessage) {
@@ -167,19 +189,27 @@ export async function POST(request: Request) {
   if (!outfitKey || OUTFITS[outfitKey].gender !== selectedGender) {
     return NextResponse.json({ error: "Choose a valid outfit for the selected model category." }, { status: 400 });
   }
+  const styleImagePath = garmentPreset.thumbnails?.[selectedGender];
+  if (!styleImagePath) {
+    return NextResponse.json({ error: "The selected outfit does not have a style reference." }, { status: 400 });
+  }
   if (!body.modelImage) {
     return NextResponse.json({ error: "Choose a male or female model preset, or upload a model image." }, { status: 400 });
   }
 
-  const [modelImage, fabricImage] = await Promise.all([
+  const [modelImage, fabricImage, styleImage] = await Promise.all([
     validateImageDataUrl(body.modelImage),
     validateImageDataUrl(body.garmentImage),
+    loadOutfitStyleImage(styleImagePath),
   ]);
   if (!modelImage) {
     return NextResponse.json({ error: "Upload a valid PNG, JPG, or WebP model image under 3 MB." }, { status: 400 });
   }
   if (!fabricImage) {
     return NextResponse.json({ error: "Upload a valid PNG, JPG, or WebP fabric image under 3 MB." }, { status: 400 });
+  }
+  if (!styleImage) {
+    return NextResponse.json({ error: "Could not load the selected outfit style reference. Please try again." }, { status: 503 });
   }
   let reservation: TryOnReservation | null = null;
   if (!isAdmin) {
@@ -207,6 +237,8 @@ export async function POST(request: Request) {
       { type: "image_url", image_url: { url: `data:${modelImage.mimeType};base64,${modelImage.bytes.toString("base64")}` } },
       { type: "text", text: "Image 2 (FABRIC):" },
       { type: "image_url", image_url: { url: `data:${fabricImage.mimeType};base64,${fabricImage.bytes.toString("base64")}` } },
+      { type: "text", text: "Image 3 (OUTFIT STYLE REFERENCE):" },
+      { type: "image_url", image_url: { url: `data:${styleImage.mimeType};base64,${styleImage.bytes.toString("base64")}` } },
       { type: "text", text: buildTryOnPrompt(outfitKey) },
     ];
     let outputUrl: string | undefined;

@@ -19,6 +19,10 @@ export const metadata: Metadata = {
   },
   description: siteDescription,
   applicationName: siteName,
+  appleWebApp: {
+    title: siteName,
+    capable: true,
+  },
   icons: {
     icon: [
       { url: "/brand/vton-labs-favicon-light.png", media: "(prefers-color-scheme: light)" },

@@ -48,8 +48,8 @@ export default function Navbar() {
 
   return (
     <>
-    <header className="sticky top-0 z-40 bg-slate-950/90 px-2 pt-2 text-slate-200 backdrop-blur-xl sm:px-6 sm:pt-3">
-      <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-2 rounded-full border border-slate-800 bg-slate-900/95 px-2.5 shadow-lg shadow-slate-950/5 sm:min-h-16 sm:gap-3 sm:px-5">
+    <header className="sticky top-0 z-40 bg-slate-950/90 px-1.5 pt-1.5 text-slate-200 backdrop-blur-xl sm:px-6 sm:pt-3">
+      <div className="mx-auto flex min-h-12 max-w-7xl items-center justify-between gap-1.5 rounded-full border border-slate-800 bg-slate-900/95 px-2.5 shadow-lg shadow-slate-950/5 sm:min-h-16 sm:gap-3 sm:px-5">
         <Link href="/" aria-label="VTON Labs home" className="flex min-w-0 shrink items-center rounded-full">
           <BrandLogo priority />
         </Link>
@@ -67,7 +67,7 @@ export default function Navbar() {
             </span>
           )}
           <ThemeToggle />
-          <div className="flex h-10 min-w-[5.5rem] items-center justify-end">
+          <div className="flex h-10 min-w-10 items-center justify-end sm:min-w-[5.5rem]">
             <AnimatePresence mode="wait" initial={false}>
               {!isAuthReady ? (
                 <motion.span key="checking" aria-hidden="true" className="h-9 w-9 rounded-full bg-slate-800" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
@@ -86,7 +86,7 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-      <nav aria-label="Mobile navigation" className="mx-auto flex max-w-7xl gap-1.5 overflow-x-auto px-1 py-1.5 text-xs font-medium md:hidden">
+      <nav aria-label="Mobile navigation" className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-0.5 py-1 text-xs font-medium md:hidden">
         <NavLink href="/studio" active={pathname.startsWith("/studio") || pathname.startsWith("/result")} isAuthReady={isAuthReady} isAuthenticated={isAuthenticated} onAuthRequired={() => setIsAuthOpen(true)} requiresAuth>Studio</NavLink>
         <NavLink href="/library" active={pathname.startsWith("/library")} isAuthReady={isAuthReady} isAuthenticated={isAuthenticated} onAuthRequired={() => setIsAuthOpen(true)} requiresAuth>Library</NavLink>
         <NavLink href="/pricing" active={pathname.startsWith("/pricing")}>Pricing</NavLink>
