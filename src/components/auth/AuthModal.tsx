@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Sparkles } from "lucide-react";
+import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import ErrorAlert from "@/components/ui/ErrorAlert";
+import BrandMark from "@/components/layout/BrandMark";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -48,8 +49,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         {/* Modal Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex p-3 rounded-xl bg-indigo-600/20 text-indigo-400 mb-3">
-            <Sparkles className="w-6 h-6" />
+          <div className="mb-3 inline-flex p-2">
+            <BrandMark className="h-10 w-10" />
           </div>
           <h2 id="auth-modal-title" className="text-xl font-bold text-white">Welcome to VTON Labs</h2>
           <p className="text-xs text-slate-400 mt-1">Sign in or create your account securely with Google.</p>

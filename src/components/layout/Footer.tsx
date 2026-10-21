@@ -48,7 +48,7 @@ export default function Footer() {
         <div className="mx-auto grid max-w-7xl gap-5 sm:gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
             <Link href="/" aria-label="VTON Labs home" className="inline-flex items-center transition-transform hover:scale-[1.01]"><BrandLogo /></Link>
-            <p className="mt-4 max-w-xs text-sm leading-6">Preview your fabrics and outfits with a private virtual try-on.</p>
+            <p className="mt-4 max-w-xs text-sm leading-6">Preview your fabrics and outfits with a personalized virtual try-on.</p>
             <p className="mt-4 text-xs text-slate-600 sm:mt-6">© 2026 VTON Labs. Built for better fitting ideas.</p>
           </div>
           <div>

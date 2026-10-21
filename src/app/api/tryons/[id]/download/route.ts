@@ -14,6 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     .select("storage_path, garment_type, expires_at")
     .eq("id", id)
     .eq("user_id", user.id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (queryError || !generation) {
     return NextResponse.json({ error: "Try-on not found." }, { status: 404 });

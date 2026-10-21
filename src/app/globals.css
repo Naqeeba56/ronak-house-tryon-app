@@ -541,6 +541,16 @@ html[data-theme="dark"] {
   object-fit: contain;
 }
 
+.home-brand-badge .vton-brand-logo {
+  height: 20px;
+  width: 80px;
+}
+
+.home-brand-badge .vton-brand-logo-image {
+  width: 80px;
+  height: 20px;
+}
+
 html[data-theme="light"] .vton-brand-logo-image-light,
 html[data-theme="dark"] .vton-brand-logo-image-dark {
   display: block;

@@ -118,21 +118,21 @@ export const GARMENT_PRESETS: readonly GarmentPresetDefinition[] = [
     description: "a traditional saree with a fitted blouse",
     fabricTarget: "the saree and blouse",
     gender: "female",
-    thumbnails: { female: "/outfit-presets/female-saree-v2.webp" },
+    thumbnails: { female: "/outfit-presets/female-saree-red.webp" },
   },
   {
     label: "Salwar suit",
     description: "a traditional salwar suit with kameez, bottoms, and dupatta",
     fabricTarget: "the kameez, coordinated bottoms, and dupatta",
     gender: "female",
-    thumbnails: { female: "/outfit-presets/female-salwar-suit.webp" },
+    thumbnails: { female: "/outfit-presets/female-salwar-pink.webp" },
   },
   {
     label: "Lehenga",
     description: "a flared lehenga skirt with choli and dupatta",
     fabricTarget: "the lehenga skirt, choli, and dupatta",
     gender: "female",
-    thumbnails: { female: "/outfit-presets/female-lehenga.webp" },
+    thumbnails: { female: "/outfit-presets/female-lehenga-green.webp" },
   },
 ] as const;
 

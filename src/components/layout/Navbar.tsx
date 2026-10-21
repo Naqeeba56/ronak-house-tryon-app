@@ -5,10 +5,11 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Sparkles, User } from "lucide-react";
+import { User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { APP_ADMIN_EMAIL } from "@/lib/constants";
 import BrandLogo from "@/components/layout/BrandLogo";
+import BrandMark from "@/components/layout/BrandMark";
 import AuthModal from "@/components/auth/AuthModal";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 
@@ -63,7 +64,7 @@ export default function Navbar() {
         <div className="flex shrink-0 items-center gap-2">
           {isAuthenticated && tryOnBalance !== null && (
             <span className="hidden items-center gap-1.5 rounded-full border border-slate-800 bg-slate-950 px-3 py-2 text-xs font-semibold text-indigo-300 sm:inline-flex">
-              <Sparkles className="h-3.5 w-3.5" /> {tryOnBalance === "unlimited" ? "Unlimited" : `${tryOnBalance} try-ons`}
+              <BrandMark className="h-3.5 w-3.5" /> {tryOnBalance === "unlimited" ? "Unlimited" : `${tryOnBalance} try-ons`}
             </span>
           )}
           <ThemeToggle />

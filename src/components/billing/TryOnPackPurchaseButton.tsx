@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LoaderCircle, Sparkles } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import AuthModal from "@/components/auth/AuthModal";
+import BrandMark from "@/components/layout/BrandMark";
 import { APP_ADMIN_EMAIL, TRYON_PLANS, type TryOnPlanId } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import ErrorAlert from "@/components/ui/ErrorAlert";
@@ -173,7 +174,7 @@ export default function TryOnPackPurchaseButton({
         disabled={isLoading}
         className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-indigo-600 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-indigo-500 disabled:cursor-wait disabled:opacity-60"
       >
-        {isLoading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+        {isLoading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <BrandMark className="h-4 w-4" />}
         {isLoading
           ? "Processing..."
           : buttonLabel

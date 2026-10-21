@@ -14,11 +14,11 @@ import {
   LogOut,
   Mail,
   ShieldCheck,
-  Sparkles,
   User,
 } from "lucide-react";
 import TryOnPackPurchaseButton from "@/components/billing/TryOnPackPurchaseButton";
 import Footer from "@/components/layout/Footer";
+import BrandMark from "@/components/layout/BrandMark";
 import { createClient } from "@/lib/supabase/client";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 
@@ -147,7 +147,7 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
           <div className="flex flex-col gap-3 border-t border-slate-800 pt-4 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between md:border-0 md:pt-0">
             <div className="sm:pr-3">
               <p className="text-xs text-slate-500">Available try-ons</p>
-              <p className="mt-1 flex items-center gap-2 text-2xl font-semibold text-white"><Sparkles className="h-5 w-5 text-indigo-300" />{totalBalance}</p>
+              <p className="mt-1 flex items-center gap-2 text-2xl font-semibold text-white"><BrandMark className="h-5 w-5" />{totalBalance}</p>
             </div>
             {!isAdmin && <TryOnPackPurchaseButton onPurchased={() => void refreshBalance()} />}
           </div>
@@ -211,8 +211,8 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
 
               <section className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/80 p-4 sm:rounded-3xl sm:p-7">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300"><ShieldCheck className="h-5 w-5" /></span>
-                <h2 className="mt-5 text-lg font-semibold text-white">Your account, kept private.</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">Your sign-in is managed securely by Google. Your try-on photos and saved results belong to your account.</p>
+                <h2 className="mt-5 text-lg font-semibold text-white">Account and Library access.</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-400">Google manages sign-in. Saved try-on results are available through your authenticated account; submitted images are sent to the configured generation provider.</p>
                 <button type="button" onClick={() => void handleSignOut()} disabled={isSigningOut} className="mt-auto inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-full border border-slate-700 px-4 text-sm font-medium text-slate-300 transition hover:border-rose-400/50 hover:text-rose-300 disabled:opacity-60 lg:hidden">
                   <LogOut className="h-4 w-4" /> {isSigningOut ? "Signing out…" : "Sign out"}
                 </button>
@@ -224,7 +224,7 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
             <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 sm:rounded-3xl sm:p-7">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div><h2 className="text-lg font-semibold text-white">Your try-on balance</h2><p className="mt-1 text-sm text-slate-400">Credits are used when you generate a new look.</p></div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-2 text-sm font-semibold text-indigo-300"><Sparkles className="h-4 w-4" /> {totalBalance} available</span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-2 text-sm font-semibold text-indigo-300"><BrandMark className="h-4 w-4" /> {totalBalance} available</span>
               </div>
               {isAdmin ? (
                 <p className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/5 p-4 text-sm font-medium text-emerald-300">Your admin account includes unlimited try-ons.</p>
@@ -247,7 +247,7 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
             <section className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 sm:p-7">
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-300"><ImageIcon className="h-5 w-5" /></span>
               <h2 className="mt-5 text-lg font-semibold text-white">A home for your looks.</h2>
-              <p className="mt-2 max-w-lg text-sm leading-6 text-slate-400">Your generated try-ons are saved privately and stay available in your Library for 30 days.</p>
+              <p className="mt-2 max-w-lg text-sm leading-6 text-slate-400">Your generated try-ons are saved to your account-only Library and stay available for up to 30 days.</p>
               <Link href="/library" className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-slate-700 px-5 text-sm font-semibold text-slate-200 transition hover:border-indigo-400/50 hover:text-white">Open my Library <ArrowRight className="h-4 w-4" /></Link>
             </section>
           )}

@@ -12,11 +12,12 @@ import { DEFAULT_MODEL_IMAGE_URL, GARMENT_PRESETS, TRY_ON_MODEL_PRESETS } from "
 import { createClient } from "@/lib/supabase/client";
 import {
   Crop,
+  Camera,
   ImagePlus,
   RefreshCw,
-  Sparkles,
   Trash2,
 } from "lucide-react";
+import BrandMark from "@/components/layout/BrandMark";
 
 const AuthModal = dynamic(() => import("@/components/auth/AuthModal"), { loading: () => null });
 
@@ -53,6 +54,16 @@ function readImage(file: Blob): Promise<string> {
   });
 }
 
+async function readUploadedImage(file: File): Promise<UploadedImage> {
+  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+    throw new Error("Choose a PNG, JPG, or WebP image.");
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new Error("Images must be 1.5 MB or smaller.");
+  }
+  return { name: file.name, dataUrl: await readImage(file) };
+}
+
 async function fetchPresetImage(imageUrl: string, imageLabel: string) {
   const response = await fetch(imageUrl);
   if (!response.ok) throw new Error(`Could not load the selected ${imageLabel}.`);
@@ -69,12 +80,14 @@ function PhotoUploadCard({
   image,
   sampleImageUrl,
   onChange,
+  onCamera,
   onRemove,
 }: {
   title: string;
   image: UploadedImage | null;
   sampleImageUrl?: string;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onCamera: () => void;
   onRemove: () => void;
 }) {
   const previewUrl = image?.dataUrl ?? sampleImageUrl;
@@ -105,6 +118,14 @@ function PhotoUploadCard({
               </button>
               <button
                 type="button"
+                onClick={onCamera}
+                aria-label={`Take a photo for ${title.toLowerCase()}`}
+                className="vton-secondary inline-flex h-8 w-8 items-center justify-center rounded-full"
+              >
+                <Camera className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
                 aria-label={`${isCropped ? "Show full" : "Crop"} ${title.toLowerCase()} preview`}
                 aria-pressed={isCropped}
                 onClick={() => setIsCropped((cropped) => !cropped)}
@@ -127,14 +148,202 @@ function PhotoUploadCard({
           <span className="max-w-full truncate text-sm font-medium text-slate-200">{image?.name ?? title}</span>
         </>
       ) : (
-        <button type="button" onClick={() => inputRef.current?.click()} className="flex w-full flex-col items-center justify-center py-3 sm:py-5">
-          <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-300 transition group-hover:bg-indigo-500/15 sm:mb-3 sm:h-11 sm:w-11"><ImagePlus className="h-5 w-5" /></span>
+        <div className="flex w-full flex-col items-center justify-center py-2 sm:py-4">
+          <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-300 sm:mb-3 sm:h-11 sm:w-11"><ImagePlus className="h-5 w-5" /></span>
           <span className="text-sm font-semibold text-slate-200">{title}</span>
-          <span className="mt-1 text-xs text-slate-500">Browse image from your device</span>
-        </button>
+          <div className="mt-3 flex w-full flex-wrap justify-center gap-2">
+            <button type="button" onClick={onCamera} className="vton-secondary inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold">
+              <Camera className="h-3.5 w-3.5" /> Use camera
+            </button>
+            <button type="button" onClick={() => inputRef.current?.click()} className="vton-secondary inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold">
+              <ImagePlus className="h-3.5 w-3.5" /> Choose file
+            </button>
+          </div>
+        </div>
       )}
       <span className="mt-2 text-[11px] text-slate-500">PNG, JPG or WebP · up to 1.5 MB</span>
       <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" aria-label={`Upload ${title}`} className="sr-only" onChange={onChange} />
+    </div>
+  );
+}
+
+function CameraCaptureModal({
+  title,
+  facingMode,
+  onUsePhoto,
+  onFallbackFile,
+  onClose,
+}: {
+  title: string;
+  facingMode: "user" | "environment";
+  onUsePhoto: (image: UploadedImage) => void;
+  onFallbackFile: (file: File) => Promise<boolean>;
+  onClose: () => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
+  const [isStarting, setIsStarting] = useState(true);
+  const [hasCameraStream, setHasCameraStream] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [capturedPhoto, setCapturedPhoto] = useState<UploadedImage & { previewUrl: string } | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const startCamera = async () => {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraError("Live camera is unavailable in this browser. Use the device camera picker or choose a file instead.");
+        setIsStarting(false);
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: facingMode } },
+          audio: false,
+        });
+        if (!isMounted) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) videoRef.current.srcObject = stream;
+        setHasCameraStream(true);
+        setIsStarting(false);
+      } catch (error) {
+        if (!isMounted) return;
+        const name = error instanceof DOMException ? error.name : "";
+        setCameraError(name === "NotAllowedError"
+          ? "Camera permission was denied. Allow camera access or use the device camera picker or choose a file."
+          : name === "NotFoundError"
+            ? "No camera was found. Use the device camera picker or choose a file instead."
+            : "Could not open the camera. Use the device camera picker or choose a file instead.");
+        setIsStarting(false);
+      }
+    };
+    void startCamera();
+    return () => {
+      isMounted = false;
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    };
+  }, [facingMode]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  const capturePhoto = async () => {
+    const video = videoRef.current;
+    if (!video?.videoWidth || !video.videoHeight) {
+      setCameraError("The camera is not ready yet. Please wait a moment and try again.");
+      return;
+    }
+
+    const canvas = document.createElement("canvas");
+    let scale = Math.min(1, 2048 / Math.max(video.videoWidth, video.videoHeight));
+    let quality = 0.9;
+    let blob: Blob | null = null;
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      canvas.width = Math.round(video.videoWidth * scale);
+      canvas.height = Math.round(video.videoHeight * scale);
+      const context = canvas.getContext("2d");
+      if (!context) {
+        setCameraError("Could not prepare the camera photo. Please try again or choose a file.");
+        return;
+      }
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
+      if (blob && blob.size <= MAX_IMAGE_BYTES) break;
+      scale *= 0.82;
+      quality *= 0.94;
+    }
+    if (!blob || blob.size > MAX_IMAGE_BYTES) {
+      setCameraError("This camera image could not be compressed to the 1.5 MB limit. Please retake the photo or choose a smaller image.");
+      return;
+    }
+
+    try {
+      const dataUrl = await readImage(blob);
+      const previewUrl = URL.createObjectURL(blob);
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = previewUrl;
+      setCapturedPhoto({ name: `${title} camera photo.webp`, dataUrl, previewUrl });
+      setCameraError(null);
+    } catch (error) {
+      setCameraError(error instanceof Error ? error.message : "Could not read the camera photo.");
+    }
+  };
+
+  const retakePhoto = () => {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = null;
+    setCapturedPhoto(null);
+    setCameraError(null);
+  };
+
+  const usePhoto = () => {
+    if (!capturedPhoto) return;
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    onUsePhoto({ name: capturedPhoto.name, dataUrl: capturedPhoto.dataUrl });
+    onClose();
+  };
+
+  const handleFallbackFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file && await onFallbackFile(file)) onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[120] grid place-items-center overflow-y-auto bg-slate-950/85 p-3 backdrop-blur-md sm:p-6">
+      <section role="dialog" aria-modal="true" aria-labelledby="camera-dialog-title" className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-4 shadow-2xl sm:rounded-3xl sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-indigo-300"><Camera className="h-4 w-4" /> Camera capture</p>
+            <h2 id="camera-dialog-title" className="mt-2 text-xl font-semibold text-white">{title}</h2>
+            <p className="mt-1 text-sm text-slate-400">Capture a photo, review it, then retake or use it.</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close camera" className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 text-slate-300 hover:bg-slate-800">×</button>
+        </div>
+        <div className="relative mt-4 aspect-[4/3] overflow-hidden rounded-2xl bg-black">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className={`h-full w-full object-contain ${capturedPhoto ? "invisible" : "visible"}`}
+          />
+          {capturedPhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={capturedPhoto.previewUrl} alt="Captured photo preview" className="absolute inset-0 h-full w-full object-contain" />
+          ) : null}
+          {isStarting && <div className="absolute inset-0 grid place-items-center bg-slate-950/70 text-sm text-slate-300">Opening camera…</div>}
+        </div>
+        {cameraError && <p role="alert" className="mt-3 rounded-xl border border-amber-400/20 bg-amber-400/5 p-3 text-sm leading-5 text-amber-100">{cameraError}</p>}
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full border border-slate-700 px-4 text-sm font-semibold text-slate-300 hover:bg-slate-800 sm:flex-none">Cancel</button>
+            <label className="inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full border border-slate-700 px-4 text-sm font-semibold text-slate-300 hover:bg-slate-800 sm:flex-none">
+              Use device camera / file
+              <input type="file" accept="image/png,image/jpeg,image/webp" capture={facingMode} className="sr-only" onChange={(event) => void handleFallbackFile(event)} />
+            </label>
+          </div>
+          {capturedPhoto ? (
+            <div className="flex gap-2">
+              <button type="button" onClick={retakePhoto} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-slate-700 px-4 text-sm font-semibold text-slate-200 hover:bg-slate-800 sm:flex-none"><RefreshCw className="h-4 w-4" /> Retake</button>
+              <button type="button" onClick={usePhoto} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-indigo-500 px-5 text-sm font-semibold text-white hover:bg-indigo-400 sm:flex-none">Use photo</button>
+            </div>
+          ) : (
+            <button type="button" onClick={() => void capturePhoto()} disabled={isStarting || !hasCameraStream} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-indigo-500 px-5 text-sm font-semibold text-white hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"><Camera className="h-4 w-4" /> Capture</button>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
@@ -145,6 +354,7 @@ export default function StudioPage() {
   const [garmentType, setGarmentType] = useState("Shirt");
   const [garmentImage, setGarmentImage] = useState<UploadedImage | null>(null);
   const [modelImage, setModelImage] = useState<UploadedImage | null>(null);
+  const [cameraTarget, setCameraTarget] = useState<"model" | "fabric" | null>(null);
   const [selectedModelPresetId, setSelectedModelPresetId] = useState<string | null>("try-on-male");
   const [selectedGender, setSelectedGender] = useState<"male" | "female">("male");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -211,20 +421,20 @@ export default function StudioPage() {
     event.target.value = "";
     if (!file) return;
 
-    setError(null);
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-      setError("Choose a PNG, JPG, or WebP image.");
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setError("Images must be 1.5 MB or smaller.");
-      return;
-    }
+    await handleImageFile(file, setImage);
+  };
 
+  const handleImageFile = async (
+    file: File,
+    setImage: (image: UploadedImage | null) => void,
+  ): Promise<boolean> => {
+    setError(null);
     try {
-      setImage({ name: file.name, dataUrl: await readImage(file) });
+      setImage(await readUploadedImage(file));
+      return true;
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "Could not read this image.");
+      return false;
     }
   };
 
@@ -292,10 +502,10 @@ export default function StudioPage() {
         <header className="mb-4 flex flex-col justify-between gap-3 sm:mb-8 sm:flex-row sm:items-end sm:gap-4">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-300">
-              <Sparkles className="h-3.5 w-3.5" /> Virtual fitting room
+              <BrandMark className="h-3.5 w-3.5" /> Virtual fitting room
             </p>
             <h1 className="vton-heading mt-2 text-2xl font-semibold tracking-tight text-white sm:mt-4 sm:text-4xl">Make the look yours.</h1>
-            <p className="mt-1.5 max-w-xl text-sm leading-5.5 text-slate-400 sm:mt-2 sm:leading-6">Add your photo and a fabric swatch. We’ll create a private try-on preview just for you.</p>
+            <p className="mt-1.5 max-w-xl text-sm leading-5.5 text-slate-400 sm:mt-2 sm:leading-6">Add your photo and a fabric swatch. The configured image-generation provider will create a try-on preview.</p>
           </div>
           <Link href="/library" className="inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-full border border-slate-800 bg-slate-900 px-4 text-sm font-medium text-slate-300 transition hover:border-indigo-400/50 hover:text-white sm:self-auto">
             <ImagePlus className="h-4 w-4" /> My Library
@@ -311,6 +521,7 @@ export default function StudioPage() {
                   title="Your photo"
                   image={modelImage}
                   sampleImageUrl={selectedModelPreset?.imageUrl}
+                  onCamera={() => setCameraTarget("model")}
                   onRemove={() => {
                     setModelImage(null);
                     setSelectedModelPresetId(defaultModelPreset.id);
@@ -325,11 +536,12 @@ export default function StudioPage() {
                 <PhotoUploadCard
                   title="Fabric photo"
                   image={garmentImage}
+                  onCamera={() => setCameraTarget("fabric")}
                   onRemove={() => setGarmentImage(null)}
                   onChange={(event) => void handleImageUpload(event, setGarmentImage)}
                 />
               </div>
-              <p className="mt-2 flex items-center gap-2 text-[11px] leading-4 text-slate-500 sm:mt-3 sm:text-xs"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" /> Your photos are only used to create your try-on.</p>
+              <p className="mt-2 flex items-center gap-2 text-[11px] leading-4 text-slate-500 sm:mt-3 sm:text-xs"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" /> Your photos are sent to the configured image-generation provider. Saved results are available through your account.</p>
             </section>
 
             <section className="vton-card rounded-2xl p-3 sm:rounded-3xl sm:p-7">
@@ -373,7 +585,7 @@ export default function StudioPage() {
                       </span>
                     ) : (
                       <span className="flex h-12 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-300 sm:h-14 sm:w-11" aria-hidden="true">
-                        <Sparkles className="h-4 w-4" />
+                        <BrandMark className="h-4 w-4" />
                       </span>
                     )}
                     <span className="text-xs font-semibold leading-4 sm:text-sm">{label}</span>
@@ -438,7 +650,7 @@ export default function StudioPage() {
                   disabled={isGenerating || !isAuthReady || (isSignedIn && (!isBalanceReady || (!isAdmin && (freeRemaining ?? 0) + (packRemaining ?? 0) === 0)))}
                   className="vton-primary flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold shadow-lg shadow-indigo-600/15 disabled:cursor-wait disabled:opacity-60"
                 >
-                  {isGenerating ? <span className="vton-line-loader" aria-hidden="true" /> : <Sparkles className="h-4 w-4" />}
+                  {isGenerating ? <span className="vton-line-loader" aria-hidden="true" /> : <BrandMark className="h-4 w-4" />}
                   {isGenerating ? "Creating your try-on…" : !isAuthReady ? "Checking account…" : isSignedIn ? "Generate my try-on" : "Try on for free"}
                 </button>
                 {isSignedIn && !isAdmin && isBalanceReady && freeRemaining === 0 && packRemaining === 0 && (
@@ -448,11 +660,35 @@ export default function StudioPage() {
                 )}
               </div>
             </section>
-            <p className="mt-3 text-center text-xs text-slate-500">Your generated look will be saved to your private Library for 30 days.</p>
+            <p className="mt-3 text-center text-xs text-slate-500">Your generated look will be saved to your account-only Library for up to 30 days.</p>
           </aside>
         </div>
       </div>
       {isAuthOpen && <AuthModal isOpen onClose={() => setIsAuthOpen(false)} />}
+      {cameraTarget && (
+        <CameraCaptureModal
+          title={cameraTarget === "model" ? "Your photo" : "Fabric photo"}
+          facingMode={cameraTarget === "model" ? "user" : "environment"}
+          onUsePhoto={(image) => {
+            setError(null);
+            if (cameraTarget === "model") {
+              setModelImage(image);
+              setSelectedModelPresetId(null);
+            } else {
+              setGarmentImage(image);
+            }
+          }}
+          onFallbackFile={async (file) => {
+            if (cameraTarget === "model") {
+              const accepted = await handleImageFile(file, setModelImage);
+              if (accepted) setSelectedModelPresetId(null);
+              return accepted;
+            }
+            return handleImageFile(file, setGarmentImage);
+          }}
+          onClose={() => setCameraTarget(null)}
+        />
+      )}
     </div>
   );
 }

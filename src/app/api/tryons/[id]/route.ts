@@ -14,6 +14,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     .select("id, storage_path")
     .eq("id", id)
     .eq("user_id", user.id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (queryError) {
     return NextResponse.json({ error: "Could not load this try-on for deletion." }, { status: 500 });
@@ -31,12 +32,13 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
   const { error: deleteError } = await supabase
     .from("try_on_generations")
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq("id", id)
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .is("deleted_at", null);
   if (deleteError) {
-    console.error("Could not remove try-on record after deleting its image.", deleteError);
-    return NextResponse.json({ error: "The image was removed, but its Library record could not be deleted. Please contact support." }, { status: 500 });
+    console.error("Could not mark try-on as deleted after removing its image.", deleteError);
+    return NextResponse.json({ error: "The image was removed, but its Library record could not be updated. Please contact support." }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

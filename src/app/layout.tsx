@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const syne = Syne({ subsets: ["latin"], variable: "--font-syne" });
 const siteName = "VTON Labs";
 const siteDescription =
-  "Create private AI-powered virtual try-on previews with your photo, fabric image, and styles including Indian ethnic wear.";
+  "Create AI-powered virtual try-on previews with your photo, fabric image, and styles including Indian ethnic wear.";
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
@@ -25,11 +25,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/brand/vton-labs-favicon-light.png", media: "(prefers-color-scheme: light)" },
-      { url: "/brand/vton-labs-favicon-dark.png", media: "(prefers-color-scheme: dark)" },
+      { url: "/brand/vton-labs-favicon-dark.png", type: "image/png", sizes: "512x512" },
       { url: "/favicon.ico", type: "image/x-icon", sizes: "any" },
     ],
-    apple: [{ url: "/brand/vton-labs-favicon-light.png", sizes: "512x512", type: "image/png" }],
+    apple: [{ url: "/brand/vton-labs-favicon-dark.png", sizes: "512x512", type: "image/png" }],
   },
   keywords: [
     "AI virtual try-on",

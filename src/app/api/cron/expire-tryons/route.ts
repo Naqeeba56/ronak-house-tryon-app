@@ -16,6 +16,7 @@ export async function GET(request: Request) {
       .from("try_on_generations")
       .select("id, storage_path")
       .lt("expires_at", new Date().toISOString())
+      .is("deleted_at", null)
       .limit(1000);
     if (queryError) throw queryError;
     if (!expired?.length) return NextResponse.json({ deleted: 0 });
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
 
     const { error: deleteError } = await admin
       .from("try_on_generations")
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .in("id", expired.map(({ id }) => id));
     if (deleteError) throw deleteError;
 

@@ -2,9 +2,9 @@ import HomeExperience from "@/components/home/HomeExperience";
 import type { Metadata } from "next";
 import { siteUrl } from "@/lib/site-url";
 
-const homeTitle = "Visualize Any Fabric on You Before You Buy or Stitch | VTON Labs";
+const homeTitle = "Preview Your Outfit Ideas with AI | VTON Labs";
 const homeDescription =
-  "Transform fabric swatches or outfit ideas into hyper-realistic, custom-fitted looks in seconds with a private AI virtual fitting room.";
+  "Explore how your fabric and outfit ideas could look with an AI-generated try-on preview. Bring your own photo or start with a studio model.";
 const homeUrl = new URL("/", siteUrl).toString();
 
 export const metadata: Metadata = {
