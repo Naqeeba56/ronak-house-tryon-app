@@ -171,12 +171,12 @@ export default function HomeExperience() {
           <div id="style-explorer" className="relative mx-auto w-full min-w-0 max-w-[610px] scroll-mt-24 lg:mr-0">
             <div className="absolute -inset-5 rounded-[3rem] bg-gradient-to-br from-indigo-500/20 via-violet-500/10 to-fuchsia-500/15 blur-2xl" aria-hidden="true" />
             <div className="relative rounded-[1.5rem] border border-white/10 bg-slate-900/90 p-2 shadow-2xl shadow-black/40 backdrop-blur sm:rounded-[2rem] sm:p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 px-1 pb-2 sm:gap-3 sm:px-3 sm:pb-4">
-                <div>
-                  <p className="text-sm font-semibold text-white sm:text-base">
+              <div className="flex items-center justify-between gap-2 px-1 pb-2 sm:gap-3 sm:px-3 sm:pb-4">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-white sm:text-base">
                     {selectedGender === "female" ? "Compare the outfit ideas" : "Explore a sample look"}
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 truncate text-xs text-slate-400">
                     {selectedGender === "female" ? "Drag the divider to explore both looks" : "Choose a style to preview"}
                   </p>
                 </div>
@@ -187,7 +187,7 @@ export default function HomeExperience() {
                       type="button"
                       aria-pressed={selectedGender === gender}
                       onClick={() => chooseGender(gender)}
-                      className={`min-h-10 rounded-full px-3.5 text-xs font-semibold capitalize transition active:scale-95 ${selectedGender === gender ? "bg-indigo-500 text-white shadow" : "text-slate-400 hover:bg-slate-900 hover:text-white"}`}
+                      className={`min-h-9 rounded-full px-3 text-xs font-semibold transition active:scale-95 sm:min-h-10 sm:px-3.5 ${selectedGender === gender ? "bg-indigo-500 text-white shadow" : "text-slate-400 hover:bg-slate-900 hover:text-white"}`}
                     >
                       {gender === "female" ? "Women" : "Men"}
                     </button>

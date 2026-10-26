@@ -35,11 +35,11 @@ export default function ThreadLoader({
         ))}
         <div className="thread-loader__logo">
           <Image
-            src="/brand/vton-loader-mark-supplied.png"
+            src="/brand/fabricfit-splash-logo.png"
             alt=""
             aria-hidden="true"
             fill
-            sizes="(max-width: 560px) 70vw, 294px"
+            sizes="(max-width: 560px) 55vw, 240px"
             unoptimized
             className="thread-loader__brand-mark"
           />

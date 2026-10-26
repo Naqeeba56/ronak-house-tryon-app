@@ -25,10 +25,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/brand/vton-labs-favicon-transparent.png", type: "image/png", sizes: "512x512" },
+      { url: "/brand/vton-labs-favicon-dark.png", type: "image/png", sizes: "512x512", media: "(prefers-color-scheme: dark)" },
+      { url: "/brand/vton-labs-favicon-dark.png", type: "image/png", sizes: "512x512", media: "(prefers-color-scheme: light)" },
       { url: "/favicon.ico", type: "image/x-icon", sizes: "any" },
     ],
-    apple: [{ url: "/brand/vton-labs-favicon-transparent.png", sizes: "512x512", type: "image/png" }],
+    apple: [{ url: "/brand/vton-labs-favicon-dark.png", sizes: "512x512", type: "image/png" }],
   },
   keywords: [
     "AI virtual try-on",

@@ -183,24 +183,27 @@ export default function LibraryGallery({
                     ) : (
                       <div className="flex h-full items-center justify-center text-slate-600"><ImageIcon className="h-8 w-8" /></div>
                     )}
-                    <span className="pointer-events-none absolute left-3 top-3 rounded-full border border-white/15 bg-slate-950/65 px-3 py-1.5 text-[11px] font-medium capitalize text-white backdrop-blur">{image.model_gender} look</span>
-                    <div className="absolute right-3 top-3 flex gap-2">
+                    <span className="pointer-events-none absolute left-2 top-2 rounded-full border border-white/15 bg-slate-950/65 px-2 py-1 text-[9px] font-medium capitalize text-white backdrop-blur sm:left-3 sm:top-3 sm:px-3 sm:py-1.5 sm:text-[11px]">{image.model_gender} look</span>
+                    <div className="absolute right-2 top-2 flex gap-1 sm:right-3 sm:top-3 sm:gap-2">
                       {image.imageUrl && (
-                        <a href={`/api/tryons/${encodeURIComponent(image.id)}/download`} aria-label={`Download ${image.garment_type} try-on`} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-slate-950/75 text-white backdrop-blur transition hover:bg-indigo-600">
-                          <Download className="h-4 w-4" />
+                        <a href={`/api/tryons/${encodeURIComponent(image.id)}/download`} aria-label={`Download ${image.garment_type} try-on`} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-slate-950/75 text-white backdrop-blur transition hover:bg-indigo-600 sm:h-11 sm:w-11">
+                          <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </a>
                       )}
-                      <button type="button" onClick={() => { setError(null); setDeleteTarget(image); }} aria-label={`Delete ${image.garment_type} try-on`} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-slate-950/75 text-white backdrop-blur transition hover:bg-rose-600">
-                        <Trash2 className="h-4 w-4" />
+                      <button type="button" onClick={() => { setError(null); setDeleteTarget(image); }} aria-label={`Delete ${image.garment_type} try-on`} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-slate-950/75 text-white backdrop-blur transition hover:bg-rose-600 sm:h-11 sm:w-11">
+                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                     </div>
                   </div>
-                  <div className="p-2.5 sm:p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0"><h2 className="truncate text-xs font-semibold text-white sm:text-sm">{image.garment_type}</h2><p className="mt-1 text-[10px] text-slate-500 sm:text-xs">{formatDisplayDate(image.created_at)}</p></div>
-                      <span className="shrink-0 rounded-full bg-indigo-500/10 px-2 py-1 text-[9px] font-semibold text-indigo-300 sm:px-2.5 sm:text-[10px]">{image.days_remaining}d left</span>
+                  <div className="p-2 sm:p-4">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                      <div className="min-w-0">
+                        <h2 className="truncate text-xs font-semibold text-white sm:text-sm">{image.garment_type}</h2>
+                        <p className="mt-0.5 text-[10px] text-slate-500 sm:mt-1 sm:text-xs">{formatDisplayDate(image.created_at)}</p>
+                      </div>
+                      <span className="self-start rounded-full bg-indigo-500/10 px-2 py-1 text-[9px] font-semibold text-indigo-300 sm:shrink-0 sm:px-2.5 sm:text-[10px]">{image.days_remaining}d left</span>
                     </div>
-                    <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-slate-800 sm:mt-4"><div className="h-full rounded-full bg-indigo-500" style={{ width: `${Math.min(100, Math.max(0, image.days_remaining / 30 * 100))}%` }} /></div>
+                    <div className="mt-2 h-1 overflow-hidden rounded-full bg-slate-800 sm:mt-4"><div className="h-full rounded-full bg-indigo-500" style={{ width: `${Math.min(100, Math.max(0, image.days_remaining / 30 * 100))}%` }} /></div>
                   </div>
                 </article>
               ))}

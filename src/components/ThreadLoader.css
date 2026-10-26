@@ -103,9 +103,12 @@ html[data-theme="light"] .thread-loader__progress {
       max(1rem, env(safe-area-inset-bottom));
   }
 
+  /* 20% smaller than the original 65.6vw / 17.5rem */
   .thread-loader__scene {
-    width: min(65.6vw, 17.5rem);
+    width: min(52.5vw, 14rem);
     flex: none;
+    /* ensure the scene stays truly centred vertically on mobile */
+    margin-inline: auto;
   }
 
   .thread-loader--fullscreen .thread-loader__content {
@@ -138,8 +141,8 @@ html[data-theme="light"] .thread-loader__progress {
   position: relative;
   z-index: 2;
   display: grid;
-  width: 78%;
-  aspect-ratio: 913 / 768;
+  width: 63%;
+  aspect-ratio: 1 / 1;
   place-items: center;
   animation: thread-logo-float 2.8s ease-in-out infinite;
   backface-visibility: hidden;
