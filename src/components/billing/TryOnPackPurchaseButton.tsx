@@ -110,11 +110,14 @@ export default function TryOnPackPurchaseButton({
         }),
       });
       const result = (await response.json()) as { error?: string; addedTryons?: number; planName?: string };
-      if (!response.ok) throw new Error(result.error ?? "Payment verification failed.");
+      if (!response.ok) {
+        setError(result.error ?? "We couldn’t verify your payment. If you were charged, please contact support.");
+        return;
+      }
       setMessage(`${result.addedTryons ?? TRYON_PLANS[planId].tryonCount} ${result.planName ?? TRYON_PLANS[planId].name} try-ons added to your account.`);
       onPurchased?.();
-    } catch (paymentError) {
-      setError(paymentError instanceof Error ? paymentError.message : "Payment verification failed.");
+    } catch {
+      setError("We couldn’t verify your payment. If you were charged, please contact support.");
     } finally {
       setIsLoading(false);
     }
@@ -137,7 +140,9 @@ export default function TryOnPackPurchaseButton({
       });
       const order = (await response.json()) as OrderResponse;
       if (!response.ok || !order.orderId || !order.keyId || !order.amount || !order.currency) {
-        throw new Error(order.error ?? "Could not start checkout.");
+        setError(order.error ?? "Checkout is temporarily unavailable. Please try again later.");
+        setIsLoading(false);
+        return;
       }
 
       await loadRazorpayCheckout();
@@ -157,8 +162,8 @@ export default function TryOnPackPurchaseButton({
         modal: { ondismiss: () => setIsLoading(false) },
       });
       checkout.open();
-    } catch (checkoutError) {
-      setError(checkoutError instanceof Error ? checkoutError.message : "Could not start checkout.");
+    } catch {
+      setError("Checkout is temporarily unavailable. Please try again later.");
       setIsLoading(false);
     }
   };

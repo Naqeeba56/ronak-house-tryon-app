@@ -9,57 +9,57 @@ import {
   ArrowDown,
   ArrowLeftRight,
   ArrowRight,
+  CalendarCheck,
   ChevronLeft,
   ChevronRight,
-  Clock3,
-  Layers3,
-  ScanFace,
+  Gift,
   ShieldCheck,
-  Shirt,
+  Sparkles,
 } from "lucide-react";
 import { GARMENT_PRESETS, TRY_ON_MODEL_PRESETS } from "@/lib/constants";
 import { HOME_OUTFIT_PREVIEWS } from "@/lib/home-outfit-previews";
 import BrandLogo from "@/components/layout/BrandLogo";
-import BrandMark from "@/components/layout/BrandMark";
 import Footer from "@/components/layout/Footer";
 
 const AuthModal = dynamic(() => import("@/components/auth/AuthModal"), { loading: () => null });
 
 type Gender = "male" | "female";
 
-const reasons = [
+const steps = [
   {
-    icon: Layers3,
-    title: "Three visual references",
-    text: "Your photo, fabric, and outfit reference go into the same generation request.",
+    title: "Pick a model",
+    text: "Choose a studio model or upload your photo.",
   },
   {
-    icon: ScanFace,
-    title: "Guided for try-ons",
-    text: "The prompt gives the configured model context about the person and garment.",
+    title: "Choose a style",
+    text: "Tap a style to preview it on your selected model.",
   },
   {
-    icon: Shirt,
-    title: "Made for outfit ideas",
-    text: "Explore styles including sarees, salwar suits, lehengas, and kurtas.",
+    title: "Create your look",
+    text: "Choose your fabric in Studio to create your try-on.",
   },
 ];
 
-const steps = [
+const homeHighlights = [
   {
-    number: "01",
-    title: "Choose a model",
-    text: "Use one of the studio models or upload a clear, full-body photo.",
+    icon: Gift,
+    title: "Your first try-on is free",
+    description: "Create one outfit preview before choosing a plan.",
   },
   {
-    number: "02",
-    title: "Add your fabric",
-    text: "Upload a photo of the cloth you are considering, then choose an outfit type.",
+    icon: Sparkles,
+    title: "AI-powered previews",
+    description: "Preview sarees, lehengas, suits, and more on a model.",
   },
   {
-    number: "03",
-    title: "Generate your preview",
-    text: "The configured image-generation model uses your photos and an outfit reference to create a look.",
+    icon: CalendarCheck,
+    title: "Credits roll over monthly",
+    description: "Unused try-ons carry forward.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Private try-on library",
+    description: "Your photos create the preview, and saved results stay private to your account.",
   },
 ];
 
@@ -67,7 +67,7 @@ export default function HomeExperience() {
   const reduceMotion = useReducedMotion();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [selectedGender, setSelectedGender] = useState<Gender>("female");
-  const [selectedOutfit, setSelectedOutfit] = useState("Salwar suit");
+  const [selectedOutfit, setSelectedOutfit] = useState("Saree");
   const [comparePosition, setComparePosition] = useState(52);
   const outfitsRef = useRef<HTMLDivElement>(null);
   const outfits = GARMENT_PRESETS.filter(
@@ -75,12 +75,15 @@ export default function HomeExperience() {
   );
   const selectedOutfitPreset = outfits.find((outfit) => outfit.label === selectedOutfit) ?? outfits[0];
   const startingImage = selectedGender === "female"
-    ? "/home-outfit-previews/sample-woman.webp"
+    ? "/home-outfit-previews/sample-woman-updated.jpeg"
     : "/home-outfit-previews/mens/male-starting-look.webp";
   const outfitPreview = HOME_OUTFIT_PREVIEWS[`${selectedGender}:${selectedOutfitPreset.label}`]
     ?? selectedOutfitPreset.thumbnails?.[selectedGender]
     ?? TRY_ON_MODEL_PRESETS.find(({ gender }) => gender === selectedGender)?.imageUrl
     ?? TRY_ON_MODEL_PRESETS[0].imageUrl;
+  const styleChoices = selectedGender === "female"
+    ? ["Saree", "Salwar suit", "Lehenga"]
+    : ["2-Piece Suit", "3-Piece Suit", "Sherwani"];
 
   useEffect(() => {
     let authPromptTimeout: number | undefined;
@@ -94,19 +97,11 @@ export default function HomeExperience() {
 
   const chooseGender = (gender: Gender) => {
     setSelectedGender(gender);
-    setSelectedOutfit(gender === "female" ? "Salwar suit" : "Kurta");
+    setSelectedOutfit(gender === "female" ? "Saree" : "2-Piece Suit");
   };
 
   const chooseOutfit = (label: string) => {
     setSelectedOutfit(label);
-  };
-
-  const exploreOutfit = (label: string) => {
-    chooseGender("female");
-    setSelectedOutfit(label);
-    document.getElementById("style-explorer")?.scrollIntoView({
-      behavior: reduceMotion ? "auto" : "smooth",
-    });
   };
 
   return (
@@ -116,56 +111,67 @@ export default function HomeExperience() {
           <div className="absolute -left-40 top-8 h-96 w-96 rounded-full bg-indigo-600/15 blur-[120px]" />
           <div className="absolute -right-36 top-20 h-[28rem] w-[28rem] rounded-full bg-fuchsia-500/10 blur-[140px]" />
         </div>
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 pb-10 pt-8 sm:gap-12 sm:px-8 sm:pb-16 sm:pt-14 lg:min-h-[690px] lg:grid-cols-[0.88fr_1.12fr] lg:gap-14 lg:px-10 lg:py-16">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-5 px-4 pb-6 pt-5 sm:gap-12 sm:px-8 sm:pb-16 sm:pt-14 lg:min-h-[690px] lg:grid-cols-[0.88fr_1.12fr] lg:gap-14 lg:px-10 lg:py-16">
           <div className="relative z-10 w-full min-w-0 max-w-xl">
             <div className="home-brand-badge inline-flex items-center gap-2 rounded-full border border-indigo-400/20 bg-indigo-400/10 px-3.5 py-2 text-[11px] font-semibold tracking-wide text-indigo-200 sm:text-xs">
               <BrandLogo />
               <span>AI VIRTUAL TRY-ON</span>
             </div>
-            <h1 className="mt-5 text-[clamp(2.7rem,11vw,4.4rem)] font-semibold leading-[0.99] tracking-[-0.06em] text-white sm:mt-7 sm:text-6xl lg:text-[4.4rem]">
+            <h1 className="mt-3 text-[clamp(2.35rem,10vw,3.2rem)] font-semibold leading-[0.99] tracking-[-0.06em] text-white sm:mt-7 sm:text-6xl lg:text-[4.4rem]">
               Your style,{" "}
               <span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
                 reimagined.
               </span>
             </h1>
-            <p className="mt-5 max-w-lg text-base leading-7 text-slate-300 sm:mt-6 sm:text-lg sm:leading-8">
-              Your photo. Your fabric. See an outfit idea take shape.
+            <p className="mt-3 max-w-lg text-base leading-6 text-slate-300 sm:mt-6 sm:text-lg sm:leading-8">
+              Your photo. Your fabric. A new look.
             </p>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-4 flex flex-col gap-2 sm:mt-7 sm:flex-row sm:gap-3">
               <Link
                 href="/studio"
-                className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-indigo-500 px-6 text-sm font-semibold text-white shadow-lg shadow-indigo-950/40 transition hover:-translate-y-0.5 hover:bg-indigo-400"
+                className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-indigo-500 px-6 text-sm font-semibold text-white shadow-lg shadow-indigo-950/40 transition hover:-translate-y-0.5 hover:bg-indigo-400 sm:min-h-12"
               >
                 Try on an outfit
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
               </Link>
               <a
-                href="#style-explorer"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-slate-700 bg-slate-900/70 px-6 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-slate-900"
+                href="#how-it-works"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-slate-700 bg-slate-900/70 px-6 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-slate-900 sm:min-h-12"
               >
-                See outfit ideas
+                See how it works
                 <ArrowDown className="h-4 w-4" aria-hidden="true" />
               </a>
             </div>
-            <p className="mt-4 text-xs leading-5 text-slate-500">
-              Start with a sample model. Sign in when you’re ready to generate.
-            </p>
-            <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-slate-400 sm:mt-9">
-              <span className="inline-flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
-                A visual starting point
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <ShieldCheck className="h-3.5 w-3.5 text-indigo-300" aria-hidden="true" />
-                Account-only saved results
-              </span>
+            <div className="relative mt-4 overflow-hidden rounded-3xl border border-indigo-400/20 bg-gradient-to-br from-indigo-500/10 via-slate-900/90 to-fuchsia-500/10 p-2.5 shadow-xl shadow-indigo-950/10 sm:mt-7 sm:p-4">
+              <div className="pointer-events-none absolute -right-12 -top-16 h-36 w-36 rounded-full bg-fuchsia-500/10 blur-3xl" aria-hidden="true" />
+              <div className="relative">
+                <h2 className="text-sm font-semibold tracking-tight text-white sm:text-base">
+                  Why try VTON Labs?
+                </h2>
+                <div className="mt-2 grid grid-cols-2 gap-1.5 sm:mt-3 sm:gap-2">
+                  {homeHighlights.map(({ icon: Icon, title, description }) => (
+                    <article
+                      key={title}
+                      className="flex min-w-0 items-start gap-1.5 rounded-xl border border-white/10 bg-slate-950/35 p-2 transition hover:border-indigo-400/30 sm:gap-3 sm:rounded-2xl sm:p-3"
+                    >
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-indigo-400/15 bg-indigo-500/10 text-indigo-300 sm:h-10 sm:w-10 sm:rounded-xl">
+                        <Icon className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0">
+                        <h3 className="text-[11px] font-semibold leading-4 text-white sm:text-sm sm:leading-5">{title}</h3>
+                        <p className="text-[11px] leading-[1.15rem] text-slate-400 sm:text-xs sm:leading-normal">{description}</p>
+                      </span>
+                    </article>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
           <div id="style-explorer" className="relative mx-auto w-full min-w-0 max-w-[610px] scroll-mt-24 lg:mr-0">
             <div className="absolute -inset-5 rounded-[3rem] bg-gradient-to-br from-indigo-500/20 via-violet-500/10 to-fuchsia-500/15 blur-2xl" aria-hidden="true" />
-            <div className="relative rounded-[1.75rem] border border-white/10 bg-slate-900/90 p-2.5 shadow-2xl shadow-black/40 backdrop-blur sm:rounded-[2rem] sm:p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 px-1.5 pb-3 sm:px-3 sm:pb-4">
+            <div className="relative rounded-[1.5rem] border border-white/10 bg-slate-900/90 p-2 shadow-2xl shadow-black/40 backdrop-blur sm:rounded-[2rem] sm:p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 px-1 pb-2 sm:gap-3 sm:px-3 sm:pb-4">
                 <div>
                   <p className="text-sm font-semibold text-white sm:text-base">
                     {selectedGender === "female" ? "Compare the outfit ideas" : "Explore a sample look"}
@@ -190,14 +196,14 @@ export default function HomeExperience() {
               </div>
 
               <div className="relative overflow-hidden rounded-[1.35rem]">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-[1.35rem] bg-slate-100">
+                <div className="vton-image-frame-3d relative aspect-square overflow-hidden rounded-[1.35rem] border border-white/10 bg-transparent shadow-xl shadow-black/20 sm:aspect-[3/4]">
                   <>
                       <Image
                         src={startingImage}
                         alt={`Sample ${selectedGender} model in the starting look`}
                         fill
                         preload
-                        className="object-cover"
+                        className="rounded-[1.35rem] object-contain"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 610px"
                       />
                       <motion.div
@@ -212,7 +218,7 @@ export default function HomeExperience() {
                           src={outfitPreview}
                           alt={`${selectedGender === "female" ? "Woman" : "Man"} wearing a ${selectedOutfitPreset.label}`}
                           fill
-                          className={selectedGender === "female" ? "object-cover origin-bottom scale-[0.96]" : "object-cover"}
+                          className="rounded-[1.35rem] object-contain"
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 610px"
                         />
                       </motion.div>
@@ -245,42 +251,42 @@ export default function HomeExperience() {
                 </div>
               </div>
 
-              <div className="mt-2 flex items-center justify-between gap-2 px-1 text-[11px] text-slate-400">
+              <div className="mt-1.5 flex items-center justify-between gap-2 px-1 text-[11px] text-slate-400 sm:mt-2">
                 <span>{selectedOutfitPreset.label} idea</span>
-                <span>Sample images · not a generated result</span>
+                <span className="hidden sm:inline">Outfit inspiration · make it yours in Studio</span>
               </div>
               {selectedGender === "female" ? (
-                <div className="mt-3 grid grid-cols-3 gap-2">
+                <div className="mt-1.5 grid grid-cols-3 gap-1 sm:mt-3 sm:gap-2">
                   {outfits.map((outfit) => (
                     <button
                       key={outfit.label}
                       type="button"
                       aria-pressed={selectedOutfit === outfit.label}
                       onClick={() => chooseOutfit(outfit.label)}
-                      className={`min-h-11 rounded-xl border px-2 text-xs font-semibold transition active:scale-95 ${selectedOutfit === outfit.label ? "border-indigo-400/60 bg-indigo-500/15 text-white" : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700 hover:text-slate-100"}`}
+                      className={`min-h-9 rounded-lg border px-1.5 text-[11px] font-semibold transition active:scale-95 sm:min-h-11 sm:rounded-xl sm:px-2 sm:text-xs ${selectedOutfit === outfit.label ? "border-indigo-400/60 bg-indigo-500/15 text-white" : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700 hover:text-slate-100"}`}
                     >
                       {outfit.label}
                     </button>
                   ))}
                 </div>
               ) : (
-                <div className="mt-3 flex min-w-0 items-center gap-1.5">
+                <div className="mt-2 flex min-w-0 items-center gap-1 sm:mt-3 sm:gap-1.5">
                   <button
                     type="button"
                     aria-label="Scroll outfit options left"
                     onClick={() => outfitsRef.current?.scrollBy({ left: -200, behavior: "smooth" })}
-                    className="inline-flex h-10 w-9 shrink-0 items-center justify-center rounded-full border border-slate-800 bg-slate-950 text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 hover:text-slate-100 active:scale-95"
+                    className="inline-flex h-9 w-8 shrink-0 items-center justify-center rounded-full border border-slate-800 bg-slate-950 text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 hover:text-slate-100 active:scale-95 sm:h-10 sm:w-9"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <div ref={outfitsRef} className="style-explorer-outfits flex min-w-0 snap-x gap-2 overflow-x-auto scroll-smooth px-0.5 py-1">
+                  <div ref={outfitsRef} className="style-explorer-outfits flex min-w-0 snap-x gap-1.5 overflow-x-auto scroll-smooth px-0.5 py-1 sm:gap-2">
                     {outfits.map((outfit) => (
                       <button
                         key={outfit.label}
                         type="button"
                         aria-pressed={selectedOutfit === outfit.label}
                         onClick={() => chooseOutfit(outfit.label)}
-                        className={`min-h-10 shrink-0 snap-start rounded-full border px-3 text-xs font-medium transition active:scale-95 ${selectedOutfit === outfit.label ? "border-indigo-400/60 bg-indigo-500/15 text-white" : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700 hover:text-slate-100"}`}
+                        className={`min-h-9 shrink-0 snap-start rounded-full border px-2.5 text-[11px] font-medium transition active:scale-95 sm:min-h-10 sm:px-3 sm:text-xs ${selectedOutfit === outfit.label ? "border-indigo-400/60 bg-indigo-500/15 text-white" : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700 hover:text-slate-100"}`}
                       >
                         {outfit.label}
                       </button>
@@ -290,190 +296,103 @@ export default function HomeExperience() {
                     type="button"
                     aria-label="Scroll outfit options right"
                     onClick={() => outfitsRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
-                    className="inline-flex h-10 w-9 shrink-0 items-center justify-center rounded-full border border-slate-800 bg-slate-950 text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 hover:text-slate-100 active:scale-95"
+                    className="inline-flex h-9 w-8 shrink-0 items-center justify-center rounded-full border border-slate-800 bg-slate-950 text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 hover:text-slate-100 active:scale-95 sm:h-10 sm:w-9"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               )}
               <p className="px-2 pt-3 text-[11px] leading-5 text-slate-500 sm:px-3">
-                Outfit reference and sample model photo; not a generated try-on result.
+                Make this look yours in Studio.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="px-4 pb-10 sm:px-8 sm:pb-16 lg:px-10" aria-label="What to expect">
-        <div className="mx-auto grid max-w-7xl gap-px overflow-hidden rounded-2xl border border-slate-800 bg-slate-800 sm:grid-cols-3 sm:rounded-3xl">
-          <div className="bg-slate-900/90 p-5 sm:p-6">
-            <p className="text-sm font-semibold text-white">Three visual references</p>
-            <p className="mt-1.5 text-sm leading-6 text-slate-400">Photo, fabric, and outfit style in one generation request.</p>
-          </div>
-          <div className="bg-slate-900/90 p-5 sm:p-6">
-            <p className="text-sm font-semibold text-white">Guided for try-ons</p>
-            <p className="mt-1.5 text-sm leading-6 text-slate-400">The selected model receives image references and outfit instructions.</p>
-          </div>
-          <div className="bg-slate-900/90 p-5 sm:p-6">
-            <p className="text-sm font-semibold text-white">Model choice can vary</p>
-            <p className="mt-1.5 text-sm leading-6 text-slate-400">This deployment’s configured model creates the preview; quality and timing vary.</p>
-          </div>
+      <section id="how-it-works" className="relative isolate overflow-hidden border-y border-slate-800 bg-slate-900/40">
+        <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+          <div className="absolute -left-32 top-1/4 h-80 w-80 rounded-full bg-indigo-500/10 blur-[100px]" />
+          <div className="absolute -right-28 bottom-0 h-72 w-72 rounded-full bg-fuchsia-500/10 blur-[100px]" />
         </div>
-      </section>
-
-      <section className="border-y border-slate-800 bg-slate-900/40">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-8 sm:py-20 lg:px-10">
-          <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-end lg:gap-12">
-            <div className="max-w-xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300">Why this model fits try-ons</p>
-              <h2 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl">
-                More visual context. Less guesswork.
-              </h2>
-            </div>
-            <p className="max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-              We don’t claim one model is best for every image. The model configured for this deployment receives your photo, fabric, and outfit reference together in one request. Results depend on the model and the images you provide.
-            </p>
-          </div>
-          <div className="mt-8 grid gap-3 sm:mt-10 md:grid-cols-3">
-            {reasons.map(({ icon: Icon, title, text }, index) => (
-              <motion.article
-                key={title}
-                initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: reduceMotion ? 0 : 0.45, delay: reduceMotion ? 0 : index * 0.08 }}
-                className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5 transition hover:-translate-y-1 hover:border-indigo-400/30 hover:shadow-xl hover:shadow-indigo-950/15 sm:p-6"
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-indigo-400/15 bg-indigo-500/10 text-indigo-300">
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <h3 className="mt-5 text-lg font-semibold text-white">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-400">{text}</p>
-              </motion.article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-4 py-14 sm:px-8 sm:py-20 lg:px-10" aria-labelledby="outfit-inspiration-heading">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300">Find your starting point</p>
-              <h2 id="outfit-inspiration-heading" className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                What could your fabric become?
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-slate-400 sm:text-base">
-                Tap a look to see it in the style explorer, then bring your own fabric into the Studio.
-              </p>
-            </div>
-            <Link href="/studio" className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-semibold text-indigo-300 transition hover:text-indigo-200 sm:self-auto">
-              Explore all outfit types <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </div>
-          <div className="mt-7 grid grid-cols-1 gap-3 sm:mt-9 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
-            {GARMENT_PRESETS.filter(({ gender }) => gender === "female").map((outfit) => {
-              const imageUrl = outfit.thumbnails?.female;
-              if (!imageUrl) return null;
-              return (
-                <button
-                  key={outfit.label}
-                  type="button"
-                  onClick={() => exploreOutfit(outfit.label)}
-                  className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 text-left transition hover:-translate-y-1 hover:border-indigo-400/40 hover:shadow-xl hover:shadow-indigo-950/20 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-400 sm:rounded-3xl"
-                >
-                  <span className="relative block aspect-[4/3] overflow-hidden bg-slate-800">
-                    <Image
-                      src={imageUrl}
-                      alt={`${outfit.label} outfit inspiration`}
-                      fill
-                      sizes="(max-width: 640px) 100vw, 33vw"
-                      className="object-cover transition duration-500 group-hover:scale-[1.03]"
-                    />
-                    <span className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/5 to-transparent" />
-                    <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 sm:p-5">
-                      <span>
-                        <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/65">Style inspiration</span>
-                        <span className="mt-1 block text-xl font-semibold text-white sm:text-2xl">{outfit.label}</span>
-                      </span>
-                      <span className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition group-hover:bg-indigo-500">
-                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                      </span>
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-            <article aria-labelledby="custom-outfit-coming-soon" className="flex min-h-64 flex-col justify-between rounded-2xl border border-dashed border-indigo-400/30 bg-gradient-to-br from-indigo-500/10 via-slate-900 to-fuchsia-500/10 p-5 sm:min-h-0 sm:rounded-3xl sm:p-6">
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex h-11 w-11 items-center justify-center">
-                  <BrandMark className="h-8 w-8" />
-                </span>
-                <span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-200">
-                  Coming soon
-                </span>
-              </div>
-              <div className="mt-8 sm:mt-10">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/55">Custom styles</p>
-                <h3 id="custom-outfit-coming-soon" className="mt-1 text-xl font-semibold text-white">Bring your own outfit image</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-400">Custom outfit-image generation is not available yet. We’ll share it here when it’s ready.</p>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section id="how-it-works" className="border-y border-slate-800 bg-slate-900/40">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-8 sm:py-20 lg:px-10">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 py-9 sm:px-8 sm:py-20 lg:px-10">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300">From idea to preview</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Your first try-on, step by step.</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-400 sm:text-base">
-              No complicated setup. Bring a photo and fabric idea, and the Studio guides you through the rest.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300">Three simple steps</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:mt-3 sm:text-4xl">From idea to try-on.</h2>
           </div>
-          <ol className="mt-8 grid gap-3 sm:mt-10 sm:gap-4 md:grid-cols-3">
+          <ol className="mt-5 grid grid-cols-1 gap-2.5 sm:mt-10 sm:gap-4 md:grid-cols-3">
             {steps.map((step, index) => (
               <motion.li
-                key={step.number}
+                key={step.title}
                 initial={reduceMotion ? false : { opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.25 }}
                 transition={{ duration: reduceMotion ? 0 : 0.5, delay: reduceMotion ? 0 : index * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5 transition hover:border-indigo-400/30 sm:p-6"
+                className={`relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950/70 transition hover:border-indigo-400/30 sm:rounded-3xl ${index !== 1 ? "flex items-stretch sm:block" : ""}`}
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/10 text-sm font-bold text-indigo-300">{step.number}</span>
-                <h3 className="mt-5 text-lg font-semibold text-white">{step.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-400">{step.text}</p>
+                {index === 1 ? (
+                  <div className="vton-image-frame-3d relative flex flex-col bg-gradient-to-br from-indigo-500/10 via-slate-900 to-fuchsia-500/10 p-2.5 pt-10 sm:aspect-[4/5] sm:p-5 sm:pt-16">
+                    <p className="mb-1.5 text-[11px] font-medium text-slate-400 sm:mb-3 sm:text-xs">Choose your outfit style</p>
+                    <div className="grid grid-cols-3 gap-1.5 sm:min-h-0 sm:flex-1 sm:grid-cols-1 sm:grid-rows-3 sm:gap-2" role="group" aria-label="Choose an outfit style">
+                      {styleChoices.map((style) => {
+                        const preset = outfits.find((outfit) => outfit.label === style);
+                        const thumbnail = HOME_OUTFIT_PREVIEWS[`${selectedGender}:${style}`]
+                          ?? preset?.thumbnails?.[selectedGender];
+                        return (
+                          <button
+                            key={style}
+                            type="button"
+                            aria-pressed={selectedOutfit === style}
+                            onClick={() => chooseOutfit(style)}
+                            className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border px-1 py-1 text-center transition sm:min-h-0 sm:flex-row sm:items-center sm:justify-start sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-2 sm:text-left ${
+                              selectedOutfit === style
+                                ? "border-indigo-400 bg-indigo-500/15 text-white shadow-sm shadow-indigo-950/30"
+                                : "border-slate-800 bg-slate-950/70 text-slate-300 hover:border-indigo-400/50 hover:bg-slate-900"
+                            }`}
+                          >
+                            {thumbnail && (
+                              <span className="relative h-9 w-7 shrink-0 overflow-hidden rounded-md border border-white/10 bg-slate-900 sm:h-full sm:min-h-10 sm:max-h-16 sm:w-12 sm:rounded-lg">
+                                <Image src={thumbnail} alt="" fill sizes="36px" className="object-contain" />
+                              </span>
+                            )}
+                            <span className="max-w-full truncate text-[10px] font-semibold leading-3 sm:min-w-0 sm:text-sm sm:leading-normal">{style}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="vton-image-frame-3d relative aspect-[3/4] w-[38%] shrink-0 overflow-hidden bg-transparent sm:aspect-[3/4] sm:w-auto">
+                    <Image
+                      src={index === 0 ? startingImage : outfitPreview}
+                      alt={index === 0
+                        ? `Selected ${selectedGender} model`
+                        : `${selectedGender === "female" ? "Model" : "Man"} preview wearing ${selectedOutfitPreset.label}`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-contain"
+                    />
+                  </div>
+                )}
+                <span className="home-step-number absolute right-2.5 top-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-lg border border-white/15 bg-slate-950/90 text-xs font-bold text-white shadow-lg shadow-black/20 sm:right-3 sm:top-3 sm:h-8 sm:w-8 sm:rounded-xl">
+                  {index + 1}
+                </span>
+                <div className={`p-2.5 sm:p-5 ${index !== 1 ? "flex min-w-0 flex-1 flex-col justify-center" : ""}`}>
+                  <h3 className="text-xs font-semibold leading-4 text-white sm:text-lg sm:leading-normal">{step.title}</h3>
+                  <p className="mt-1 text-[11px] leading-4 text-slate-400 sm:text-sm sm:leading-normal">{step.text}</p>
+                </div>
               </motion.li>
             ))}
           </ol>
 
-          <div className="mt-5 grid gap-3 rounded-2xl border border-indigo-400/20 bg-gradient-to-br from-indigo-500/10 via-slate-950 to-fuchsia-500/5 p-5 sm:mt-7 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-5 sm:rounded-3xl sm:p-7">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-300/15 bg-indigo-400/10 text-indigo-200">
-              <Clock3 className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <div>
-              <h3 className="text-base font-semibold text-white sm:text-lg">What happens after you press generate?</h3>
-              <p className="mt-1 text-sm leading-6 text-slate-400">
-                Your images are sent to the image-generation model configured for the Studio. Generation time and output resolution can vary; the Studio keeps you informed while it works.
-              </p>
-            </div>
-            <Link href="/studio" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-indigo-500 px-5 text-sm font-semibold text-white transition hover:bg-indigo-400">
-              See the Studio <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </div>
         </div>
       </section>
 
       <section className="px-4 py-12 sm:px-8 sm:py-16 lg:px-10">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 overflow-hidden rounded-3xl border border-indigo-400/20 bg-gradient-to-r from-indigo-500/15 via-slate-900 to-fuchsia-500/10 p-5 shadow-2xl shadow-indigo-950/20 sm:gap-8 sm:p-9 md:flex-row md:items-center">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-200">Your next outfit idea starts here</p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Ready to see where your fabric could take you?</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-300 sm:text-base">
-              Open the Studio, choose a model and outfit, and create a visual starting point for your next decision.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-200">Ready when you are</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Let’s create your next look.</h2>
           </div>
           <Link href="/studio" className="group inline-flex min-h-12 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-indigo-500 px-6 text-sm font-semibold text-white transition hover:bg-indigo-400 md:w-auto">
             Start in the Studio

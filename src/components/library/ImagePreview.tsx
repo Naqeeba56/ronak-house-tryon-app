@@ -25,9 +25,9 @@ export default function ImagePreview({
   }, [isOpen]);
 
   return (
-    <div className="media-overlay relative aspect-[4/5] overflow-hidden rounded-lg border border-slate-800 bg-slate-950">
+    <div className="vton-image-frame-3d media-overlay relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-lg shadow-black/20">
       <button type="button" onClick={() => setIsOpen(true)} aria-label="Open try-on image full screen" className="absolute inset-0 h-full w-full cursor-zoom-in">
-        <Image src={imageUrl} alt={alt} fill sizes="(max-width: 768px) 100vw, 60vw" className="object-contain" />
+        <Image src={imageUrl} alt={alt} fill sizes="(max-width: 768px) 100vw, 60vw" className="rounded-2xl object-contain" />
       </button>
       {children}
       {isOpen && (

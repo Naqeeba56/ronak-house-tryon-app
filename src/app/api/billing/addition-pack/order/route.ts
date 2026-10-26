@@ -21,13 +21,15 @@ export async function POST(request: Request) {
   }
 
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ error: "Paid-pack fulfillment is not configured yet." }, { status: 503 });
+    console.error("Addition-pack checkout is unavailable because fulfillment is not configured.");
+    return NextResponse.json({ error: "Checkout is temporarily unavailable. Please try again later." }, { status: 503 });
   }
 
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
   if (!keyId || !keySecret) {
-    return NextResponse.json({ error: "Addition-pack payments are not configured yet." }, { status: 503 });
+    console.error("Addition-pack checkout is unavailable because payment processing is not configured.");
+    return NextResponse.json({ error: "Checkout is temporarily unavailable. Please try again later." }, { status: 503 });
   }
 
   let requestBody: { planId?: string };
@@ -58,8 +60,12 @@ export async function POST(request: Request) {
     });
     const order = (await response.json()) as RazorpayOrderResponse;
     if (!response.ok || !order.id || order.amount !== plan.amountPaise || order.currency !== "INR") {
+      console.error("The payment provider could not create an addition-pack order.", {
+        status: response.status,
+        description: order.error?.description,
+      });
       return NextResponse.json(
-        { error: order.error?.description ?? "Could not create the Razorpay order." },
+        { error: "We couldn’t start checkout. Please try again or contact support." },
         { status: response.ok ? 502 : response.status },
       );
     }
@@ -84,7 +90,8 @@ export async function POST(request: Request) {
       name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? "VTON Labs",
       email: user.email ?? "",
     });
-  } catch {
-    return NextResponse.json({ error: "Could not prepare your addition-pack checkout." }, { status: 503 });
+  } catch (checkoutError) {
+    console.error("Could not prepare the addition-pack checkout.", checkoutError);
+    return NextResponse.json({ error: "Checkout is temporarily unavailable. Please try again later." }, { status: 503 });
   }
 }

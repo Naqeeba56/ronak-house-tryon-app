@@ -9,6 +9,7 @@ import Link from "next/link";
 import GeneratingIndicator from "@/components/studio/GeneratingIndicator";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import { DEFAULT_MODEL_IMAGE_URL, GARMENT_PRESETS, TRY_ON_MODEL_PRESETS } from "@/lib/constants";
+import { HOME_OUTFIT_PREVIEWS } from "@/lib/home-outfit-previews";
 import { createClient } from "@/lib/supabase/client";
 import {
   Crop,
@@ -98,7 +99,7 @@ function PhotoUploadCard({
     <div className="vton-dropzone group relative flex min-h-40 flex-col items-center justify-center overflow-hidden rounded-2xl p-2.5 text-center sm:min-h-48 sm:p-4">
       {previewUrl ? (
         <>
-          <div className="relative mb-2 h-24 w-full overflow-hidden rounded-xl sm:mb-3 sm:h-32">
+          <div className="vton-image-frame-3d relative mb-2 h-24 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-sm shadow-black/20 sm:mb-3 sm:h-32">
             <Image
               src={previewUrl}
               alt={`${title} preview`}
@@ -106,7 +107,7 @@ function PhotoUploadCard({
               loading="eager"
               unoptimized={Boolean(image)}
               sizes="(max-width: 640px) 100vw, 360px"
-              className={`vton-image-enter transition duration-300 ${isCropped ? "object-cover" : "object-contain"}`}
+              className={`vton-image-enter rounded-xl transition duration-300 ${isCropped ? "object-cover" : "object-contain"}`}
             />
             <div className="vton-image-actions vton-glass absolute inset-x-2 bottom-2 flex items-center justify-center gap-1 rounded-full p-1">
               <button
@@ -170,12 +171,14 @@ function PhotoUploadCard({
 function CameraCaptureModal({
   title,
   facingMode,
+  fallbackToAnyCamera,
   onUsePhoto,
   onFallbackFile,
   onClose,
 }: {
   title: string;
   facingMode: "user" | "environment";
+  fallbackToAnyCamera: boolean;
   onUsePhoto: (image: UploadedImage) => void;
   onFallbackFile: (file: File) => Promise<boolean>;
   onClose: () => void;
@@ -196,29 +199,47 @@ function CameraCaptureModal({
         setIsStarting(false);
         return;
       }
+      let stream: MediaStream;
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: facingMode } },
           audio: false,
         });
-        if (!isMounted) {
-          stream.getTracks().forEach((track) => track.stop());
+      } catch (preferredCameraError) {
+        if (!isMounted) return;
+        const preferredErrorName = preferredCameraError instanceof DOMException
+          ? preferredCameraError.name
+          : "";
+        if (!fallbackToAnyCamera || ["NotAllowedError", "SecurityError"].includes(preferredErrorName)) {
+          setCameraError(getCameraErrorMessage(preferredCameraError));
+          setIsStarting(false);
           return;
         }
-        streamRef.current = stream;
-        if (videoRef.current) videoRef.current.srcObject = stream;
-        setHasCameraStream(true);
-        setIsStarting(false);
-      } catch (error) {
-        if (!isMounted) return;
-        const name = error instanceof DOMException ? error.name : "";
-        setCameraError(name === "NotAllowedError"
-          ? "Camera permission was denied. Allow camera access or use the device camera picker or choose a file."
-          : name === "NotFoundError"
-            ? "No camera was found. Use the device camera picker or choose a file instead."
-            : "Could not open the camera. Use the device camera picker or choose a file instead.");
-        setIsStarting(false);
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        } catch (fallbackCameraError) {
+          if (!isMounted) return;
+          setCameraError(getCameraErrorMessage(fallbackCameraError));
+          setIsStarting(false);
+          return;
+        }
       }
+      if (!isMounted) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      streamRef.current = stream;
+      if (videoRef.current) videoRef.current.srcObject = stream;
+      setHasCameraStream(true);
+      setIsStarting(false);
+    };
+    const getCameraErrorMessage = (error: unknown) => {
+      const name = error instanceof DOMException ? error.name : "";
+      return name === "NotAllowedError" || name === "SecurityError"
+        ? "Camera permission was denied. Allow camera access or use the device camera picker or choose a file."
+        : name === "NotFoundError" || name === "OverconstrainedError"
+          ? "No usable camera was found. Use the device camera picker or choose a file instead."
+          : "Could not open the camera. Use the device camera picker or choose a file instead.";
     };
     void startCamera();
     return () => {
@@ -227,7 +248,7 @@ function CameraCaptureModal({
       streamRef.current = null;
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     };
-  }, [facingMode]);
+  }, [fallbackToAnyCamera, facingMode]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -274,8 +295,8 @@ function CameraCaptureModal({
       previewUrlRef.current = previewUrl;
       setCapturedPhoto({ name: `${title} camera photo.webp`, dataUrl, previewUrl });
       setCameraError(null);
-    } catch (error) {
-      setCameraError(error instanceof Error ? error.message : "Could not read the camera photo.");
+    } catch {
+      setCameraError("Could not read the camera photo. Please retake it or choose a file.");
     }
   };
 
@@ -311,7 +332,7 @@ function CameraCaptureModal({
           </div>
           <button type="button" onClick={onClose} aria-label="Close camera" className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 text-slate-300 hover:bg-slate-800">×</button>
         </div>
-        <div className="relative mt-4 aspect-[4/3] overflow-hidden rounded-2xl bg-black">
+        <div className="vton-image-frame-3d relative mt-4 aspect-[4/3] overflow-hidden rounded-2xl bg-black">
           <video
             ref={videoRef}
             autoPlay
@@ -321,7 +342,7 @@ function CameraCaptureModal({
           />
           {capturedPhoto ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={capturedPhoto.previewUrl} alt="Captured photo preview" className="absolute inset-0 h-full w-full object-contain" />
+            <img src={capturedPhoto.previewUrl} alt="Captured photo preview" className="absolute inset-0 h-full w-full rounded-2xl object-contain" />
           ) : null}
           {isStarting && <div className="absolute inset-0 grid place-items-center bg-slate-950/70 text-sm text-slate-300">Opening camera…</div>}
         </div>
@@ -433,7 +454,12 @@ export default function StudioPage() {
       setImage(await readUploadedImage(file));
       return true;
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "Could not read this image.");
+      const message = uploadError instanceof Error ? uploadError.message : "";
+      setError(
+        message === "Choose a PNG, JPG, or WebP image." || message === "Images must be 1.5 MB or smaller."
+          ? message
+          : "Could not read this image. Choose a PNG, JPG, or WebP file and try again.",
+      );
       return false;
     }
   };
@@ -483,14 +509,15 @@ export default function StudioPage() {
           setFreeRemaining(0);
           setPackRemaining(0);
         }
-        throw new Error(generated.error ?? "The model could not generate this try-on.");
+        setError(generated.error ?? "We couldn’t create this try-on. Please check your images and try again.");
+        return;
       }
       if (generated.unlimited) setIsAdmin(true);
       if (generated.freeRemaining !== undefined) setFreeRemaining(generated.freeRemaining);
       if (generated.packRemaining !== undefined) setPackRemaining(generated.packRemaining);
       router.push(`/result/${encodeURIComponent(generated.generationId)}`);
-    } catch (generationError) {
-      setError(generationError instanceof Error ? generationError.message : "Image generation failed.");
+    } catch {
+      setError("We couldn’t create this try-on. Please check your images and try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -499,24 +526,24 @@ export default function StudioPage() {
   return (
     <div className="vton-shell vton-ui min-h-[calc(100vh-7rem)]">
       <div className="mobile-compact mx-auto max-w-7xl px-3.5 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
-        <header className="mb-4 flex flex-col justify-between gap-3 sm:mb-8 sm:flex-row sm:items-end sm:gap-4">
+        <header className="mb-3 flex flex-col justify-between gap-2 sm:mb-8 sm:flex-row sm:items-end sm:gap-4">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-300">
               <BrandMark className="h-3.5 w-3.5" /> Virtual fitting room
             </p>
             <h1 className="vton-heading mt-2 text-2xl font-semibold tracking-tight text-white sm:mt-4 sm:text-4xl">Make the look yours.</h1>
-            <p className="mt-1.5 max-w-xl text-sm leading-5.5 text-slate-400 sm:mt-2 sm:leading-6">Add your photo and a fabric swatch. The configured image-generation provider will create a try-on preview.</p>
+            <p className="mt-1.5 max-w-xl text-sm leading-5.5 text-slate-400 sm:mt-2 sm:leading-6">Add your photo and a fabric swatch to create a try-on preview.</p>
           </div>
           <Link href="/library" className="inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-full border border-slate-800 bg-slate-900 px-4 text-sm font-medium text-slate-300 transition hover:border-indigo-400/50 hover:text-white sm:self-auto">
             <ImagePlus className="h-4 w-4" /> My Library
           </Link>
         </header>
 
-        <div className="grid items-start gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)]">
-          <div className="space-y-3 sm:space-y-5">
-            <section className="vton-card rounded-2xl p-3 sm:rounded-3xl sm:p-7">
+        <div className="grid items-start gap-3 sm:gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)]">
+          <div className="space-y-2.5 sm:space-y-5">
+            <section className="vton-card rounded-2xl p-2.5 sm:rounded-3xl sm:p-7">
               <StepHeading number="01" title="Start with two photos" subtitle="A clear, full-body photo works best." />
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3">
+              <div className="mt-2.5 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3">
                 <PhotoUploadCard
                   title="Your photo"
                   image={modelImage}
@@ -541,12 +568,12 @@ export default function StudioPage() {
                   onChange={(event) => void handleImageUpload(event, setGarmentImage)}
                 />
               </div>
-              <p className="mt-2 flex items-center gap-2 text-[11px] leading-4 text-slate-500 sm:mt-3 sm:text-xs"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" /> Your photos are sent to the configured image-generation provider. Saved results are available through your account.</p>
+              <p className="mt-2 flex items-center gap-2 text-[11px] leading-4 text-slate-500 sm:mt-3 sm:text-xs"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" /> Your photos are used to create a try-on preview. Saved results stay available through your account.</p>
             </section>
 
-            <section className="vton-card rounded-2xl p-3 sm:rounded-3xl sm:p-7">
+            <section className="vton-card rounded-2xl p-2.5 sm:rounded-3xl sm:p-7">
               <StepHeading number="02" title="Choose who’s trying it on" subtitle="We’ll show outfit ideas for your category." />
-              <div className="mt-3 grid grid-cols-2 gap-2 rounded-2xl bg-slate-950 p-1 sm:mt-5 sm:p-1.5">
+              <div className="mt-2.5 grid grid-cols-2 gap-2 rounded-2xl bg-slate-950 p-1 sm:mt-5 sm:p-1.5">
                 {TRY_ON_MODEL_PRESETS.map((model) => (
                   <button
                     key={model.gender}
@@ -568,20 +595,24 @@ export default function StudioPage() {
               </div>
             </section>
 
-            <section className="vton-card rounded-2xl p-3 sm:rounded-3xl sm:p-7">
+            <section className="vton-card rounded-2xl p-2.5 sm:rounded-3xl sm:p-7">
               <StepHeading number="03" title="Pick the outfit type" subtitle="We’ll tailor the try-on to the garment you upload." />
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:grid-cols-3 sm:gap-2.5">
-                {outfitPresets.map(({ label, thumbnails }) => (
-                  <button
-                    key={label}
-                    type="button"
-                    aria-pressed={garmentType === label}
-                    onClick={() => setGarmentType(label)}
-                    className={`group flex min-h-16 items-center gap-2 rounded-xl border px-2 py-1.5 text-left transition hover:-translate-y-0.5 active:scale-[0.99] sm:min-h-20 sm:gap-3 sm:rounded-2xl sm:px-3 sm:py-3 ${garmentType === label ? "border-indigo-400/70 bg-indigo-500/10 text-white shadow-lg shadow-indigo-950/20" : "border-slate-800 bg-slate-950/50 text-slate-300 hover:border-slate-700"}`}
-                  >
-                    {thumbnails?.[selectedGender] ? (
-                      <span className="relative h-12 w-9 shrink-0 overflow-hidden rounded-lg bg-slate-900 sm:h-14 sm:w-11" aria-hidden="true">
-                        <Image src={thumbnails[selectedGender]} alt="" fill className="object-cover object-top transition duration-300 group-hover:scale-105" sizes="44px" />
+              <div className="mt-2.5 grid grid-cols-2 gap-2 sm:mt-5 sm:grid-cols-3 sm:gap-2.5">
+                {outfitPresets.map(({ label, thumbnails }) => {
+                  const thumbnail = selectedGender === "male"
+                    ? HOME_OUTFIT_PREVIEWS[`male:${label}`] ?? thumbnails?.male
+                    : thumbnails?.female;
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      aria-pressed={garmentType === label}
+                      onClick={() => setGarmentType(label)}
+                      className={`group flex min-h-16 items-center gap-2 rounded-xl border px-2 py-1.5 text-left transition hover:-translate-y-0.5 active:scale-[0.99] sm:min-h-20 sm:gap-3 sm:rounded-2xl sm:px-3 sm:py-3 ${garmentType === label ? "border-indigo-400/70 bg-indigo-500/10 text-white shadow-lg shadow-indigo-950/20" : "border-slate-800 bg-slate-950/50 text-slate-300 hover:border-slate-700"}`}
+                    >
+                    {thumbnail ? (
+                      <span className="vton-image-frame-3d relative h-12 w-9 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-slate-900 shadow-sm shadow-black/20 sm:h-14 sm:w-11" aria-hidden="true">
+                        <Image src={thumbnail} alt="" fill className="rounded-xl object-contain transition duration-300" sizes="44px" />
                       </span>
                     ) : (
                       <span className="flex h-12 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-300 sm:h-14 sm:w-11" aria-hidden="true">
@@ -589,8 +620,9 @@ export default function StudioPage() {
                       </span>
                     )}
                     <span className="text-xs font-semibold leading-4 sm:text-sm">{label}</span>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             </section>
           </div>
@@ -604,11 +636,11 @@ export default function StudioPage() {
                 </div>
                 <span className="rounded-full border border-slate-700 bg-slate-950 px-3 py-1 text-xs font-medium capitalize text-slate-300">{selectedGender}</span>
               </div>
-              <div className="media-overlay vton-studio-canvas relative aspect-[4/5]">
+              <div className="vton-image-frame-3d media-overlay vton-studio-canvas relative mx-2 mb-2 aspect-[4/5] overflow-hidden rounded-2xl border border-white/10 shadow-lg shadow-black/25 sm:mx-3 sm:mb-3 sm:rounded-3xl">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={previewModelImage}
-                    className="absolute inset-0"
+                    className="absolute inset-0 overflow-hidden rounded-2xl"
                     initial={reduceMotion ? false : { opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={reduceMotion ? undefined : { opacity: 0 }}
@@ -621,7 +653,7 @@ export default function StudioPage() {
                       loading="eager"
                       fetchPriority="high"
                       unoptimized={Boolean(modelImage)}
-                      className={modelImage ? "object-cover" : "object-contain"}
+                      className="rounded-2xl object-cover object-top"
                       sizes="(max-width: 1024px) 100vw, 420px"
                     />
                   </motion.div>
@@ -668,7 +700,8 @@ export default function StudioPage() {
       {cameraTarget && (
         <CameraCaptureModal
           title={cameraTarget === "model" ? "Your photo" : "Fabric photo"}
-          facingMode={cameraTarget === "model" ? "user" : "environment"}
+          facingMode="environment"
+          fallbackToAnyCamera={cameraTarget === "model"}
           onUsePhoto={(image) => {
             setError(null);
             if (cameraTarget === "model") {

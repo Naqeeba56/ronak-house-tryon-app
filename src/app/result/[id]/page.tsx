@@ -30,8 +30,8 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
   if (!image?.signedUrl) notFound();
 
   return (
-    <section className="mx-auto min-h-[70vh] max-w-5xl px-4 py-6 text-slate-100 sm:px-6 sm:py-8">
-      <header className="mb-5 text-center sm:mb-6">
+    <section className="mobile-compact mx-auto min-h-[70vh] max-w-5xl px-4 py-4 text-slate-100 sm:px-6 sm:py-8">
+      <header className="mb-4 text-center sm:mb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-300">Result</p>
         <h1 className="mt-2 text-xl font-bold text-white sm:text-2xl">Your try-on is ready</h1>
         <p className="mt-1 text-sm capitalize text-slate-400">{generation.model_gender} · {generation.garment_type} · saved for {generation.days_remaining} more days</p>

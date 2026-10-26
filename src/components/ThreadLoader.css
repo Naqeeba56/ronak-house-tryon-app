@@ -1,0 +1,311 @@
+.thread-loader {
+  --thread-cyan: #00e5ff;
+  --thread-blue: #3675ff;
+  --thread-purple: #a855f7;
+  --thread-pink: #ff36bd;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 1.5rem;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgb(93 51 168 / 20%), transparent 55%),
+    #080812;
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+}
+
+.thread-loader--fullscreen {
+  position: fixed;
+  z-index: 99999;
+  inset: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.thread-loader--embedded {
+  width: 100%;
+  height: 100%;
+  min-height: 12rem;
+  padding: 1rem;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgb(93 51 168 / 18%), transparent 55%),
+    rgb(8 8 18 / 84%);
+}
+
+html[data-theme="light"] .thread-loader {
+  color: #18181b;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgb(139 92 246 / 12%), transparent 55%),
+    #fafafa;
+}
+
+html[data-theme="light"] .thread-loader--embedded {
+  background:
+    radial-gradient(ellipse at 50% 40%, rgb(139 92 246 / 14%), transparent 55%),
+    rgb(255 255 255 / 92%);
+}
+
+html[data-theme="light"] .thread-loader__content h2 {
+  background-image: linear-gradient(90deg, #2563eb, #6d28d9, #c026d3);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+html[data-theme="light"] .thread-loader__content p {
+  color: #52525b;
+}
+
+html[data-theme="light"] .thread-loader__orbit--inner {
+  border-color: rgb(39 39 42 / 18%);
+}
+
+html[data-theme="light"] .thread-loader__orbit-dot {
+  background: #fff;
+  box-shadow:
+    0 0 7px #fff,
+    0 0 16px var(--thread-cyan),
+    0 0 25px var(--thread-blue);
+}
+
+html[data-theme="light"] .thread-loader__progress {
+  background: rgb(39 39 42 / 12%);
+}
+
+.thread-loader__scene {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(82vw, 21.875rem);
+  aspect-ratio: 1;
+  isolation: isolate;
+}
+
+.thread-loader--embedded .thread-loader__scene {
+  width: min(48vw, 11rem);
+  flex: 0 1 auto;
+}
+
+@media (max-width: 560px) {
+  .thread-loader--fullscreen {
+    display: grid;
+    grid-auto-rows: max-content;
+    place-content: center;
+    justify-items: center;
+    min-height: 100svh;
+    min-height: 100dvh;
+    padding:
+      max(1rem, env(safe-area-inset-top))
+      1rem
+      max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .thread-loader__scene {
+    width: min(65.6vw, 17.5rem);
+    flex: none;
+  }
+
+  .thread-loader--fullscreen .thread-loader__content {
+    width: 100%;
+  }
+
+  .thread-loader--embedded .thread-loader__scene {
+    width: min(38.4vw, 8.8rem);
+  }
+}
+
+.thread-loader__glow {
+  position: absolute;
+  z-index: -1;
+  inset: 22%;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--thread-cyan),
+    var(--thread-blue),
+    var(--thread-purple),
+    var(--thread-pink)
+  );
+  opacity: 0.3;
+  filter: blur(3.4rem);
+  animation: thread-glow-pulse 3s ease-in-out infinite alternate;
+}
+
+.thread-loader__logo {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: 78%;
+  aspect-ratio: 913 / 768;
+  place-items: center;
+  animation: thread-logo-float 2.8s ease-in-out infinite;
+  backface-visibility: hidden;
+}
+
+.thread-loader__brand-mark {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.thread-loader__orbit {
+  position: absolute;
+  inset: 7%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.thread-loader__orbit--outer {
+  border: 1.5px solid transparent;
+  border-top-color: var(--thread-cyan);
+  border-right-color: var(--thread-pink);
+  border-bottom-color: var(--thread-purple);
+  border-left-color: var(--thread-blue);
+  box-shadow:
+    0 0 12px rgb(0 229 255 / 18%),
+    inset 0 0 12px rgb(255 54 189 / 8%);
+  animation: thread-orbit-rotate 4s linear infinite;
+}
+
+.thread-loader__orbit-dot {
+  position: absolute;
+  top: 8%;
+  left: 13%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 7px #fff,
+    0 0 16px var(--thread-cyan),
+    0 0 25px var(--thread-blue);
+}
+
+.thread-loader__orbit--inner {
+  inset: 15%;
+  border: 1px dashed rgb(255 255 255 / 18%);
+  animation: thread-orbit-rotate 12s linear infinite reverse;
+}
+
+.thread-loader__particle {
+  position: absolute;
+  z-index: 3;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: thread-particle-glow 1.6s ease-in-out infinite alternate;
+}
+
+.thread-loader__particle--one {
+  top: 17%;
+  left: 25%;
+  background: var(--thread-cyan);
+  box-shadow: 0 0 15px var(--thread-cyan);
+}
+
+.thread-loader__particle--two {
+  top: 30%;
+  right: 11%;
+  background: var(--thread-pink);
+  box-shadow: 0 0 15px var(--thread-pink);
+  animation-delay: 0.4s;
+}
+
+.thread-loader__particle--three {
+  right: 26%;
+  bottom: 20%;
+  background: var(--thread-purple);
+  box-shadow: 0 0 15px var(--thread-purple);
+  animation-delay: 0.8s;
+}
+
+.thread-loader__particle--four {
+  bottom: 30%;
+  left: 12%;
+  background: var(--thread-blue);
+  box-shadow: 0 0 15px var(--thread-blue);
+  animation-delay: 1.2s;
+}
+
+.thread-loader__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8125rem;
+  margin-top: -2px;
+  text-align: center;
+}
+
+.thread-loader__content h2 {
+  margin: 0;
+  background: linear-gradient(90deg, #81eaff, #fff, #ff9cde);
+  background-clip: text;
+  color: transparent;
+  font-size: clamp(0.9375rem, 3vw, 1.125rem);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  -webkit-background-clip: text;
+}
+
+.thread-loader__content p {
+  max-width: 24rem;
+  margin: 0;
+  color: #a6a3b8;
+  font-size: 0.75rem;
+  letter-spacing: 0.025em;
+  line-height: 1.5;
+}
+
+.thread-loader__progress {
+  width: 9.0625rem;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 10%);
+}
+
+.thread-loader__progress span {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--thread-cyan), var(--thread-blue), var(--thread-pink));
+  box-shadow: 0 0 12px var(--thread-pink);
+  animation: thread-progress-move 1.5s ease-in-out infinite;
+}
+
+@keyframes thread-orbit-rotate {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes thread-logo-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.025); }
+}
+
+@keyframes thread-glow-pulse {
+  from { opacity: 0.2; transform: scale(0.85); }
+  to { opacity: 0.4; transform: scale(1.12); }
+}
+
+@keyframes thread-particle-glow {
+  from { opacity: 0.4; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1.4); }
+}
+
+@keyframes thread-progress-move {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(360%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thread-loader *,
+  .thread-loader *::before,
+  .thread-loader *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}

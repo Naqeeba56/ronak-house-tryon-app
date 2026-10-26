@@ -148,15 +148,17 @@ export async function POST(request: Request) {
 
   const token = process.env.AICREDITS_API_KEY;
   if (!token || token.includes("*") || token === "your_aicredits_key") {
+    console.error("Try-on generation is unavailable because the image provider credential is not configured.");
     return NextResponse.json(
-      { error: "AICredits is not configured. Add AICREDITS_API_KEY to your local environment." },
+      { error: "Try-on generation isn’t available right now. Please contact support if this continues." },
       { status: 503 },
     );
   }
   const imageModel = process.env.GEMINI_IMAGE_MODEL?.trim();
   if (!imageModel) {
+    console.error("Try-on generation is unavailable because the image model is not configured.");
     return NextResponse.json(
-      { error: "Image generation is not configured. Add GEMINI_IMAGE_MODEL to your local environment." },
+      { error: "Try-on generation isn’t available right now. Please contact support if this continues." },
       { status: 503 },
     );
   }
@@ -165,7 +167,7 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as GenerateRequest;
   } catch {
-    return NextResponse.json({ error: "The generation request was not valid JSON." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn’t process your request. Please review your selections and try again." }, { status: 400 });
   }
 
   const modelPreset = TRY_ON_MODEL_PRESETS.find(({ id }) => id === body.modelPresetId);
@@ -191,7 +193,7 @@ export async function POST(request: Request) {
   }
   const styleImagePath = garmentPreset.thumbnails?.[selectedGender];
   if (!styleImagePath) {
-    return NextResponse.json({ error: "The selected outfit does not have a style reference." }, { status: 400 });
+    return NextResponse.json({ error: "This outfit style is currently unavailable. Please choose another style." }, { status: 400 });
   }
   if (!body.modelImage) {
     return NextResponse.json({ error: "Choose a male or female model preset, or upload a model image." }, { status: 400 });
@@ -256,6 +258,7 @@ export async function POST(request: Request) {
         }),
       });
       if (!aicreditsResponse.ok) {
+        console.error("The image generation provider rejected a try-on request.", { status: aicreditsResponse.status });
         providerFailed = true;
         break;
       }
@@ -313,7 +316,8 @@ export async function POST(request: Request) {
       freeRemaining: reservation?.free_remaining ?? 0,
       packRemaining: reservation?.pack_remaining ?? 0,
     });
-  } catch {
+  } catch (generationError) {
+    console.error("Could not complete or save the generated try-on.", generationError);
     if (generationId) {
       await sessionClient.from("try_on_generations").delete().eq("id", generationId).eq("user_id", user.id);
     }

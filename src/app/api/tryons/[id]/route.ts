@@ -17,7 +17,8 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     .is("deleted_at", null)
     .maybeSingle();
   if (queryError) {
-    return NextResponse.json({ error: "Could not load this try-on for deletion." }, { status: 500 });
+    console.error("Could not load the user's try-on for deletion.", queryError);
+    return NextResponse.json({ error: "We couldn’t delete this look. Please try again later." }, { status: 500 });
   }
   if (!generation) {
     return NextResponse.json({ error: "Try-on not found." }, { status: 404 });
@@ -27,7 +28,8 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     .from("try-on-results")
     .remove([generation.storage_path]);
   if (storageError) {
-    return NextResponse.json({ error: "Could not remove the saved image. Please try again." }, { status: 502 });
+    console.error("Could not remove the user's saved try-on image.", storageError);
+    return NextResponse.json({ error: "We couldn’t delete this look. Please try again later." }, { status: 502 });
   }
 
   const { error: deleteError } = await supabase

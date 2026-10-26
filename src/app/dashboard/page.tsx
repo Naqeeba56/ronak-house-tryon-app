@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ArrowUpRight, IndianRupee, LayoutDashboard, Users, Image as ImageIcon, ImageOff } from "lucide-react";
+import { ArrowUpRight, IndianRupee, LayoutDashboard, Users } from "lucide-react";
 import { APP_ADMIN_EMAIL } from "@/lib/constants";
 import { formatDisplayDate } from "@/lib/date-format";
 import ErrorAlert from "@/components/ui/ErrorAlert";
@@ -34,32 +34,25 @@ export default async function DashboardPage() {
   if (!isOwner) redirect("/");
   const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
   const activityWindowStart = new Date(thirtyDaysAgo).toISOString();
-  const nowIso = new Date().toISOString();
 
   let analyticsError: string | null = null;
   let userCount = 0;
   let newUserCount = 0;
   let generationCount = 0;
-  let activeImageCount = 0;
-  let deletedImageCount = 0;
   let activeUserCount = 0;
   const paidOrders: PaidOrder[] = [];
   let recentUsers: Array<{ id: string; email: string; name: string; createdAt: string }> = [];
 
   try {
     const admin = createSupabaseAdminClient();
-    const [usersResult, generationsResult, activeGenerationsResult] = await Promise.all([
+    const [usersResult, generationsResult] = await Promise.all([
       admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
       admin.from("try_on_generations").select("id", { count: "exact", head: true }),
-      admin.from("try_on_generations").select("id", { count: "exact", head: true }).is("deleted_at", null).gt("expires_at", nowIso),
     ]);
     if (usersResult.error) throw usersResult.error;
     if (generationsResult.error) throw generationsResult.error;
-    if (activeGenerationsResult.error) throw activeGenerationsResult.error;
 
     generationCount = generationsResult.count ?? 0;
-    activeImageCount = Math.min(activeGenerationsResult.count ?? 0, generationCount);
-    deletedImageCount = generationCount - activeImageCount;
     const activeUserIds = new Set<string>();
     for (let start = 0; ; start += 1000) {
       const { data, error } = await admin
@@ -108,7 +101,6 @@ export default async function DashboardPage() {
     analyticsError = error instanceof Error ? error.message : "Analytics data could not be loaded.";
   }
 
-  const totalRevenuePaise = paidOrders.reduce((total, order) => total + order.amount_paise, 0);
   const recentRevenuePaise = paidOrders.reduce(
     (total, order) => total + (order.paid_at && Date.parse(order.paid_at) >= thirtyDaysAgo ? order.amount_paise : 0),
     0,
@@ -116,7 +108,7 @@ export default async function DashboardPage() {
   const paidUserMap = new Map(recentUsers.map((account) => [account.id, account.email]));
 
   return (
-    <div className="mobile-compact mx-auto min-h-[75vh] max-w-7xl space-y-6 px-4 py-7 text-slate-100 sm:space-y-8 sm:px-8 sm:py-10 lg:px-10">
+    <div className="mobile-compact mx-auto min-h-[75vh] max-w-7xl space-y-4 px-4 py-7 text-slate-100 sm:space-y-8 sm:px-8 sm:py-10 lg:px-10">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="inline-flex items-center gap-2 rounded-full border border-indigo-400/20 bg-indigo-400/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-300"><LayoutDashboard className="h-3.5 w-3.5" /> Owner only</p>
@@ -136,9 +128,6 @@ export default async function DashboardPage() {
         <MetricCard label="Registered users" value={analyticsError ? "—" : userCount.toLocaleString()} detail={analyticsError ? "Unavailable until Supabase is configured" : `${newUserCount} joined in the last 30 days`} icon={<Users className="h-5 w-5 text-indigo-300" />} />
         <MetricCard label="Active users · 30 days" value={analyticsError ? "—" : activeUserCount.toLocaleString()} detail={analyticsError ? "Unavailable until Supabase is configured" : "Users with a saved generation in the last 30 days"} icon={<Users className="h-5 w-5 text-violet-300" />} />
         <MetricCard label="Generated images" value={analyticsError ? "—" : generationCount.toLocaleString()} detail={analyticsError ? "Unavailable until Supabase is configured" : "Historical generation records"} icon={<BrandMark className="h-5 w-5" />} />
-        <MetricCard label="Active images" value={analyticsError ? "—" : activeImageCount.toLocaleString()} detail={analyticsError ? "Unavailable until Supabase is configured" : "Not deleted; includes records pending expiry cleanup"} icon={<ImageIcon className="h-5 w-5 text-emerald-300" />} />
-        <MetricCard label="Deleted images" value={analyticsError ? "—" : deletedImageCount.toLocaleString()} detail={analyticsError ? "Unavailable until Supabase is configured" : "Removed or expired; earlier hard deletes cannot be recovered"} icon={<ImageOff className="h-5 w-5 text-amber-300" />} />
-        <MetricCard label="Captured revenue" value={analyticsError ? "—" : formatCurrency(totalRevenuePaise)} detail={analyticsError ? "Unavailable until Supabase is configured" : "Paid Razorpay orders"} icon={<IndianRupee className="h-5 w-5 text-emerald-300" />} />
         <MetricCard label="Revenue · 30 days" value={analyticsError ? "—" : formatCurrency(recentRevenuePaise)} detail={analyticsError ? "Unavailable until Supabase is configured" : `${paidOrders.length} paid orders total`} icon={<IndianRupee className="h-5 w-5 text-amber-300" />} />
       </section>
 

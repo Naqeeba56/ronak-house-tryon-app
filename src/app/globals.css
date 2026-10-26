@@ -253,88 +253,6 @@
   background: rgb(9 9 11 / 48%);
 }
 
-.vton-generation-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 1rem;
-  text-align: center;
-}
-
-.vton-generating-loader {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 5rem;
-  width: min(100%, 17rem);
-  font-family: var(--font-inter), sans-serif;
-  font-size: clamp(1.45rem, 6vw, 1.8rem);
-  font-weight: 600;
-  user-select: none;
-  color: #fff;
-}
-
-.vton-generating-letter {
-  display: inline-block;
-  opacity: 0;
-  animation: vton-generating-letter 4s infinite linear;
-  z-index: 2;
-}
-
-.vton-generating-letter:nth-child(1) { animation-delay: 0.1s; }
-.vton-generating-letter:nth-child(2) { animation-delay: 0.205s; }
-.vton-generating-letter:nth-child(3) { animation-delay: 0.31s; }
-.vton-generating-letter:nth-child(4) { animation-delay: 0.415s; }
-.vton-generating-letter:nth-child(5) { animation-delay: 0.521s; }
-.vton-generating-letter:nth-child(6) { animation-delay: 0.626s; }
-.vton-generating-letter:nth-child(7) { animation-delay: 0.731s; }
-.vton-generating-letter:nth-child(8) { animation-delay: 0.837s; }
-.vton-generating-letter:nth-child(9) { animation-delay: 0.942s; }
-.vton-generating-letter:nth-child(10) { animation-delay: 1.047s; }
-
-.vton-generating-scan {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  background-color: transparent;
-  mask: repeating-linear-gradient(90deg, transparent 0, transparent 6px, #000 7px, #000 8px);
-  pointer-events: none;
-}
-
-.vton-generating-scan::after {
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle at 50% 50%, #ff0 0%, transparent 50%),
-    radial-gradient(circle at 45% 45%, #f00 0%, transparent 45%),
-    radial-gradient(circle at 55% 55%, #0ff 0%, transparent 45%),
-    radial-gradient(circle at 45% 55%, #0f0 0%, transparent 45%),
-    radial-gradient(circle at 55% 45%, #00f 0%, transparent 45%);
-  mask: radial-gradient(circle at 50% 50%, transparent 0, transparent 10%, #000 25%);
-  content: "";
-  animation: vton-generating-scan 2s infinite alternate, vton-generating-pulse 4s infinite;
-  animation-timing-function: cubic-bezier(0.6, 0.8, 0.5, 1);
-}
-
-@keyframes vton-generating-scan {
-  from { transform: translateX(-55%); }
-  to { transform: translateX(55%); }
-}
-
-@keyframes vton-generating-pulse {
-  0%, 100% { opacity: 0; }
-  15% { opacity: 1; }
-  65% { opacity: 0; }
-}
-
-@keyframes vton-generating-letter {
-  0%, 100% { opacity: 0; }
-  5% { opacity: 1; text-shadow: 0 0 4px #fff; transform: scale(1.1) translateY(-2px); }
-  20% { opacity: 0.2; }
-}
-
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -558,17 +476,27 @@ html[data-theme="dark"] .vton-brand-logo-image-dark {
 
 @media (max-width: 639px) {
   .vton-brand-logo {
-    height: 36px;
+    height: 30px;
   }
 
   .vton-brand-logo-image {
-    width: 144px;
-    height: 36px;
+    width: 120px;
+    height: 30px;
   }
 }
 
 html[data-theme="light"] [class~="text-white"]:not([class~="vton-primary"]) {
   color: #18181b;
+}
+
+html[data-theme="light"] .home-step-number {
+  border-color: rgb(139 92 246 / 35%);
+  background-color: #ede9fe;
+  color: #5b21b6;
+}
+
+html[data-theme="light"] .home-step-number.home-step-number.text-white {
+  color: #5b21b6;
 }
 
 html[data-theme="light"] [class~="bg-indigo-500"][class~="text-white"]:not([class~="vton-primary"]),
@@ -802,6 +730,28 @@ html[data-theme="light"] .media-overlay [class*="bg-slate-950/"] {
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--vton-accent) 12%, transparent);
   }
 
+  .vton-image-frame-3d {
+    transform: perspective(1200px) translateZ(0);
+    transform-style: preserve-3d;
+    box-shadow: 0 12px 28px rgb(0 0 0 / 12%), 0 2px 6px rgb(0 0 0 / 8%);
+    transition: transform 280ms cubic-bezier(0.2, 0.75, 0.25, 1), box-shadow 280ms ease;
+  }
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .vton-image-frame-3d:hover {
+      transform: perspective(1200px) translateY(-4px) rotateX(1deg) rotateY(-0.6deg);
+      box-shadow: 0 22px 42px rgb(0 0 0 / 20%), 0 6px 12px rgb(0 0 0 / 10%);
+    }
+  }
+
+  html[data-theme="light"] .vton-image-frame-3d {
+    box-shadow: 0 12px 28px rgb(24 24 27 / 10%), 0 2px 6px rgb(24 24 27 / 6%);
+  }
+
+  html[data-theme="light"] .vton-image-frame-3d:hover {
+    box-shadow: 0 22px 42px rgb(24 24 27 / 16%), 0 6px 12px rgb(24 24 27 / 8%);
+  }
+
   .vton-image-enter {
     animation: vton-image-enter 280ms ease-out both;
   }
@@ -962,8 +912,6 @@ html[data-theme="light"] .media-overlay [class*="bg-slate-950/"] {
   .vton-navigation-loading,
   .vton-spinner,
   .vton-spinner > span,
-  .vton-generating-letter,
-  .vton-generating-scan::after,
   .vton-line-loader::after {
     animation: none;
   }
@@ -993,5 +941,15 @@ html[data-theme="light"] .media-overlay [class*="bg-slate-950/"] {
 @media (max-width: 380px) {
   .mobile-compact {
     padding-inline: 0.875rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .mobile-compact {
+    padding-block: 1rem !important;
+  }
+
+  .mobile-compact > header {
+    margin-bottom: 1rem !important;
   }
 }

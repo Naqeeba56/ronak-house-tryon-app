@@ -1,9 +1,9 @@
 export const HOME_OUTFIT_PREVIEWS: Readonly<Record<string, string>> = {
-  "male:Shirt": "/home-outfit-previews/mens/male-shirt.webp",
-  "male:Pant": "/home-outfit-previews/mens/male-pant.webp",
+  "male:Shirt": "/home-outfit-previews/mens/male-shirt-updated.jpeg",
+  "male:Pant": "/home-outfit-previews/mens/male-pant-updated.jpeg",
   "male:Indo-Western Jacket": "/home-outfit-previews/mens/male-indo-jacket.webp",
-  "male:2-Piece Suit": "/home-outfit-previews/mens/male-suit-two-piece.webp",
-  "male:3-Piece Suit": "/home-outfit-previews/mens/male-suit-three-piece.webp",
+  "male:2-Piece Suit": "/home-outfit-previews/mens/male-suit-three-piece.webp",
+  "male:3-Piece Suit": "/home-outfit-previews/mens/male-suit-two-piece.webp",
   "male:Blazer": "/home-outfit-previews/mens/male-blazer.webp",
   "male:Nehru Jacket": "/home-outfit-previews/mens/male-nehru-jacket.webp",
   "male:Sherwani": "/home-outfit-previews/mens/male-sherwani.webp",

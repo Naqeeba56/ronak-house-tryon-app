@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as VerifyRequest;
   } catch {
-    return NextResponse.json({ error: "The payment response was not valid JSON." }, { status: 400 });
+    return NextResponse.json({ error: "We couldn’t verify your payment. Please try again." }, { status: 400 });
   }
 
   if (
@@ -52,14 +52,16 @@ export async function POST(request: Request) {
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
   if (!keyId || !keySecret) {
-    return NextResponse.json({ error: "Addition-pack payments are not configured yet." }, { status: 503 });
+    console.error("Addition-pack payment verification is unavailable because payment processing is not configured.");
+    return NextResponse.json({ error: "We couldn’t verify this payment right now. Please contact support." }, { status: 503 });
   }
 
   let admin: ReturnType<typeof createSupabaseAdminClient>;
   try {
     admin = createSupabaseAdminClient();
   } catch {
-    return NextResponse.json({ error: "Payment fulfillment is not configured yet. No payment was captured." }, { status: 503 });
+    console.error("Addition-pack payment verification is unavailable because fulfillment is not configured.");
+    return NextResponse.json({ error: "We couldn’t complete your purchase right now. Please contact support." }, { status: 503 });
   }
 
   try {
@@ -73,12 +75,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "This addition-pack order was not found." }, { status: 404 });
     }
     const plan = TRYON_PLANS[order.plan_id as TryOnPlanId];
-    if (order.amount_paise !== plan.amountPaise || order.tryon_count !== plan.tryonCount) {
-      return NextResponse.json({ error: "The stored addition-pack order is invalid." }, { status: 400 });
+    const validStoredOrder = order.amount_paise === plan.amountPaise && (
+      order.tryon_count === plan.tryonCount ||
+      (order.plan_id === "pro" && order.tryon_count === 90) ||
+      (order.plan_id === "topup" && order.tryon_count === 50)
+    );
+    if (!validStoredOrder) {
+      console.error("An addition-pack purchase has invalid stored order details.", { orderId: body.orderId });
+      return NextResponse.json({ error: "We couldn’t verify this purchase. Please contact support." }, { status: 400 });
     }
 
     if (!isValidSignature(body.orderId, body.paymentId, body.signature, keySecret)) {
-      return NextResponse.json({ error: "Razorpay payment verification failed." }, { status: 400 });
+      return NextResponse.json({ error: "We couldn’t verify your payment. If you were charged, please contact support." }, { status: 400 });
     }
 
     const authorization = `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`;
@@ -89,9 +97,9 @@ export async function POST(request: Request) {
     const payment = (await paymentResponse.json()) as RazorpayPaymentResponse;
     if (
       !paymentResponse.ok || payment.order_id !== body.orderId ||
-      payment.amount !== plan.amountPaise || payment.currency !== "INR"
+      payment.amount !== order.amount_paise || payment.currency !== "INR"
     ) {
-      return NextResponse.json({ error: "Razorpay could not confirm this payment." }, { status: 400 });
+      return NextResponse.json({ error: "Your payment is still being confirmed. Please check your payment status before trying again." }, { status: 400 });
     }
 
     let capturedPayment = payment;
@@ -99,15 +107,15 @@ export async function POST(request: Request) {
       const captureResponse = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(body.paymentId)}/capture`, {
         method: "POST",
         headers: { Authorization: authorization, "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: plan.amountPaise, currency: "INR" }),
+        body: JSON.stringify({ amount: order.amount_paise, currency: "INR" }),
       });
       capturedPayment = (await captureResponse.json()) as RazorpayPaymentResponse;
       if (!captureResponse.ok) {
-        return NextResponse.json({ error: "Payment authorization succeeded, but capture did not." }, { status: 402 });
+        return NextResponse.json({ error: "Your payment is still processing. Please check its status or contact support before trying again." }, { status: 402 });
       }
     }
     if (capturedPayment.status !== "captured") {
-      return NextResponse.json({ error: "Razorpay payment is not captured." }, { status: 402 });
+      return NextResponse.json({ error: "Your payment is still processing. Please check its status or contact support before trying again." }, { status: 402 });
     }
 
     const { data: credited, error: creditError } = await admin.rpc("credit_tryon_pack", {
@@ -115,11 +123,13 @@ export async function POST(request: Request) {
       p_razorpay_payment_id: body.paymentId,
     });
     if (creditError || !credited) {
-      return NextResponse.json({ error: "Payment was received, but try-on credits could not be added. Contact support." }, { status: 503 });
+      if (creditError) console.error("Payment succeeded but try-on credits could not be applied.", creditError);
+      return NextResponse.json({ error: "Payment received, but your try-ons aren’t available yet. Please contact support." }, { status: 503 });
     }
 
-    return NextResponse.json({ success: true, addedTryons: plan.tryonCount, planName: plan.name });
-  } catch {
-    return NextResponse.json({ error: "Could not verify the addition-pack payment." }, { status: 503 });
+    return NextResponse.json({ success: true, addedTryons: order.tryon_count, planName: plan.name });
+  } catch (verificationError) {
+    console.error("Could not verify the addition-pack payment.", verificationError);
+    return NextResponse.json({ error: "We couldn’t verify your payment. If you were charged, please contact support." }, { status: 503 });
   }
 }

@@ -28,7 +28,7 @@ export async function GET() {
   ]);
 
   if (entitlements.error || grants.error) {
-    return NextResponse.json({ error: "Try-on balance is not available yet." }, { status: 503 });
+    return NextResponse.json({ error: "Your try-on balance is temporarily unavailable. Please try again later." }, { status: 503 });
   }
 
   return NextResponse.json({

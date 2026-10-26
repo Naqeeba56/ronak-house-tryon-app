@@ -30,7 +30,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         redirectTo: `${window.location.origin}/api/auth/callback`,
       },
     });
-    if (error) setErrorMsg(error.message);
+    if (error) setErrorMsg("We couldn’t start Google sign-in. Please try again.");
     setLoading(false);
   };
 

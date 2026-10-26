@@ -4,8 +4,8 @@ export const APP_ADMIN_EMAIL = "ansaritalish938@gmail.com";
 
 export const TRYON_PLANS = {
   starter: { name: "Starter", amountPaise: 6000, tryonCount: 10 },
-  pro: { name: "Pro", amountPaise: 49900, tryonCount: 90 },
-  topup: { name: "Top-up", amountPaise: 29900, tryonCount: 50 },
+  pro: { name: "Pro", amountPaise: 49900, tryonCount: 80 },
+  topup: { name: "Top-up", amountPaise: 29900, tryonCount: 45 },
 } as const;
 
 export type TryOnPlanId = keyof typeof TRYON_PLANS;

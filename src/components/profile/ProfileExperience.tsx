@@ -21,6 +21,14 @@ import Footer from "@/components/layout/Footer";
 import BrandMark from "@/components/layout/BrandMark";
 import { createClient } from "@/lib/supabase/client";
 import ErrorAlert from "@/components/ui/ErrorAlert";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type ProfileTab = "account" | "billing" | "library";
 type InitialProfile = {
@@ -53,6 +61,7 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const router = useRouter();
 
   const refreshBalance = async () => {
@@ -77,12 +86,12 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
       const { error } = await createClient().auth.updateUser({ data: { full_name: nextName } });
       if (error) throw error;
       setIsEditing(false);
-    } catch (error) {
+    } catch {
       setFullName(previousName);
       setSavedFullName(previousName);
       setIsEditing(true);
       setProfileMessage(null);
-      setProfileError(error instanceof Error ? error.message : "We couldn't save your profile. Please try again.");
+      setProfileError("We couldn\u2019t save your profile. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -96,19 +105,25 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
     setShowSavedTick(false);
   };
 
-  const handleSignOut = async () => {
+  // Opens the confirmation dialog — actual sign-out happens in confirmSignOut
+  const handleSignOut = () => {
+    setShowSignOutConfirm(true);
+  };
+
+  const confirmSignOut = async () => {
     setIsSigningOut(true);
     const { error } = await createClient().auth.signOut();
     if (error) {
-      setProfileError(error.message);
+      setProfileError("We couldn\u2019t sign you out. Please try again.");
       setIsSigningOut(false);
+      setShowSignOutConfirm(false);
       return;
     }
     router.push("/");
   };
 
   const initials = fullName.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
-  const totalBalance = isAdmin ? "Unlimited" : freeRemaining === null || packRemaining === null ? "…" : freeRemaining + packRemaining;
+  const totalBalance = isAdmin ? "Unlimited" : freeRemaining === null || packRemaining === null ? "\u2026" : freeRemaining + packRemaining;
 
   return (
     <>
@@ -127,16 +142,16 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
     <div className="mobile-compact mx-auto min-h-[75vh] max-w-7xl px-4 py-7 text-slate-100 sm:px-8 sm:py-10 lg:px-10 lg:py-14">
       <header className="mb-6 sm:mb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-300">Your space</p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-4xl">Account & preferences</h1>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-4xl">Account &amp; preferences</h1>
         <p className="mt-2 text-sm text-slate-400">Manage your profile, try-ons, and saved looks in one place.</p>
       </header>
 
-      <section className="relative mb-6 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 p-4 sm:mb-8 sm:rounded-3xl sm:p-7">
+      <section className="relative mb-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 p-3 sm:mb-8 sm:rounded-3xl sm:p-7">
         <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
-        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-indigo-500/15 text-lg font-semibold text-indigo-200 sm:h-16 sm:w-16">
-              {avatarUrl ? <Image src={avatarUrl} alt={`${fullName} profile`} width={64} height={64} unoptimized className="h-full w-full object-cover" /> : initials || <User className="h-6 w-6" />}
+              {avatarUrl ? <Image src={avatarUrl} alt={`${fullName} profile`} width={64} height={64} unoptimized className="h-full w-full rounded-2xl object-cover" /> : initials || <User className="h-6 w-6" />}
             </div>
             <div className="min-w-0">
               <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-indigo-300"><BadgeCheck className="h-3.5 w-3.5" /> FabricFit member</span>
@@ -154,7 +169,7 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
         </div>
       </section>
 
-      <div className="grid min-w-0 gap-4 sm:gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
+      <div className="grid min-w-0 gap-3 sm:gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
         <nav aria-label="Profile sections" className="flex gap-1 rounded-2xl border border-slate-800 bg-slate-900/60 p-1.5 sm:gap-2 sm:p-2 lg:flex-col lg:self-start">
           {PROFILE_TABS.map(({ id, label, icon: Icon }) => (
             <button
@@ -171,8 +186,13 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
             </button>
           ))}
           <div className="hidden border-t border-slate-800 pt-2 lg:block">
-            <button type="button" onClick={() => void handleSignOut()} disabled={isSigningOut} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-slate-400 transition hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-60">
-              <LogOut className="h-4 w-4" /> {isSigningOut ? "Signing out…" : "Sign out"}
+            <button
+              type="button"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-slate-400 transition hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-60"
+            >
+              <LogOut className="h-4 w-4" /> {isSigningOut ? "Signing out\u2026" : "Sign out"}
             </button>
           </div>
         </nav>
@@ -196,7 +216,7 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
                 {isEditing ? (
                   <div className="mt-5 flex flex-wrap gap-3">
                     <button type="button" onClick={() => void handleSaveProfile()} disabled={isSaving || !fullName.trim()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-indigo-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:scale-[1.02] hover:bg-indigo-500 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50">
-                      {isSaving ? "Saving…" : showSavedTick ? "Saved" : "Save Changes"}
+                      {isSaving ? "Saving\u2026" : showSavedTick ? "Saved" : "Save Changes"}
                       <AnimatePresence mode="wait" initial={false}>
                         {showSavedTick ? <motion.span key="saved" initial={{ opacity: 0, scale: 0.5, rotate: -35 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.22 }}><Check className="h-4 w-4" /></motion.span> : <motion.span key="arrow" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><ArrowRight className="h-4 w-4" /></motion.span>}
                       </AnimatePresence>
@@ -212,9 +232,14 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
               <section className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/80 p-4 sm:rounded-3xl sm:p-7">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300"><ShieldCheck className="h-5 w-5" /></span>
                 <h2 className="mt-5 text-lg font-semibold text-white">Account and Library access.</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">Google manages sign-in. Saved try-on results are available through your authenticated account; submitted images are sent to the configured generation provider.</p>
-                <button type="button" onClick={() => void handleSignOut()} disabled={isSigningOut} className="mt-auto inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-full border border-slate-700 px-4 text-sm font-medium text-slate-300 transition hover:border-rose-400/50 hover:text-rose-300 disabled:opacity-60 lg:hidden">
-                  <LogOut className="h-4 w-4" /> {isSigningOut ? "Signing out…" : "Sign out"}
+                <p className="mt-2 text-sm leading-6 text-slate-400">Google manages sign-in. Your saved try-on results are available through your account, and submitted photos are used to create try-on previews.</p>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
+                  className="mt-auto inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-full border border-slate-700 px-4 text-sm font-medium text-slate-300 transition hover:border-rose-400/50 hover:text-rose-300 disabled:opacity-60 lg:hidden"
+                >
+                  <LogOut className="h-4 w-4" /> {isSigningOut ? "Signing out\u2026" : "Sign out"}
                 </button>
               </section>
             </div>
@@ -254,6 +279,38 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
         </div>
       </div>
     </div>
+
+    {/* Sign-out confirmation dialog */}
+    <Dialog open={showSignOutConfirm} onOpenChange={(open) => { if (!isSigningOut) setShowSignOutConfirm(open); }}>
+      <DialogContent showCloseButton={!isSigningOut} className="max-w-sm border-slate-800 bg-slate-900 text-slate-100">
+        <DialogHeader>
+          <DialogTitle className="text-white">Sign out of FabricFit?</DialogTitle>
+          <DialogDescription className="text-slate-400">
+            You&apos;ll need to sign back in to access your library and generate new looks.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="border-slate-800 bg-slate-950/50">
+          <button
+            type="button"
+            onClick={() => setShowSignOutConfirm(false)}
+            disabled={isSigningOut}
+            className="inline-flex min-h-10 items-center justify-center rounded-full border border-slate-700 px-5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => void confirmSignOut()}
+            disabled={isSigningOut}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-rose-600 px-5 text-sm font-semibold text-white transition hover:bg-rose-500 disabled:opacity-60"
+          >
+            <LogOut className="h-4 w-4" />
+            {isSigningOut ? "Signing out\u2026" : "Sign out"}
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
     <Footer />
     </>
   );
@@ -263,7 +320,7 @@ function BalanceCard({ label, value, detail }: { label: string; value: number | 
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
       <p className="text-sm font-medium text-slate-300">{label}</p>
-      <p className="mt-3 text-3xl font-semibold tracking-tight text-white">{value ?? "…"}</p>
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-white">{value ?? "\u2026"}</p>
       <p className="mt-1 text-xs text-slate-500">{detail}</p>
     </div>
   );

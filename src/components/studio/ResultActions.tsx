@@ -17,10 +17,14 @@ export function ResultActions({ generationId }: { generationId: string }) {
     try {
       const response = await fetch(`/api/tryons/${encodeURIComponent(generationId)}`, { method: "DELETE" });
       const result = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(result.error ?? "Could not delete this try-on.");
+      if (!response.ok) {
+        setError(result.error ?? "We couldn’t delete this look. Please try again.");
+        setIsDeleting(false);
+        return;
+      }
       router.replace("/library");
-    } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Could not delete this try-on.");
+    } catch {
+      setError("We couldn’t delete this look. Please try again.");
       setIsDeleting(false);
     }
   };

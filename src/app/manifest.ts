@@ -11,7 +11,7 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#09090b",
     icons: [
       {
-        src: "/brand/vton-labs-favicon-dark.png",
+        src: "/brand/vton-labs-favicon-transparent.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
