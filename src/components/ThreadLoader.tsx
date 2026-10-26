@@ -35,7 +35,7 @@ export default function ThreadLoader({
         ))}
         <div className="thread-loader__logo">
           <Image
-            src="/brand/fabricfit-splash-logo.jpg"
+            src="/brand/fabricfit-splash-logo.png"
             alt=""
             aria-hidden="true"
             fill
