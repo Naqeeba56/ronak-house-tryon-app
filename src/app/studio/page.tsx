@@ -56,8 +56,8 @@ function readImage(file: Blob): Promise<string> {
 }
 
 async function readUploadedImage(file: File): Promise<UploadedImage> {
-  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-    throw new Error("Choose a PNG, JPG, or WebP image.");
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Choose an image file (PNG, JPG, WebP, or HEIC).");
   }
   if (file.size > MAX_IMAGE_BYTES) {
     throw new Error("Images must be 1.5 MB or smaller.");
@@ -162,8 +162,8 @@ function PhotoUploadCard({
           </div>
         </div>
       )}
-      <span className="mt-2 text-[11px] text-slate-500">PNG, JPG or WebP · up to 1.5 MB</span>
-      <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" aria-label={`Upload ${title}`} className="sr-only" onChange={onChange} />
+      <span className="mt-2 text-[11px] text-slate-500">PNG, JPG, WebP or HEIC · up to 1.5 MB</span>
+      <input ref={inputRef} type="file" accept="image/*" aria-label={`Upload ${title}`} className="sr-only" onChange={onChange} />
     </div>
   );
 }
@@ -352,7 +352,7 @@ function CameraCaptureModal({
             <button type="button" onClick={onClose} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full border border-slate-700 px-4 text-sm font-semibold text-slate-300 hover:bg-slate-800 sm:flex-none">Cancel</button>
             <label className="inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full border border-slate-700 px-4 text-sm font-semibold text-slate-300 hover:bg-slate-800 sm:flex-none">
               Use device camera / file
-              <input type="file" accept="image/png,image/jpeg,image/webp" capture={facingMode} className="sr-only" onChange={(event) => void handleFallbackFile(event)} />
+              <input type="file" accept="image/*" className="sr-only" onChange={(event) => void handleFallbackFile(event)} />
             </label>
           </div>
           {capturedPhoto ? (

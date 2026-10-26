@@ -265,7 +265,26 @@ export default function LibraryGallery({
 
       {preview?.imageUrl && (
         <div role="dialog" aria-modal="true" aria-label={`${preview.garment_type} try-on`} onClick={() => setPreview(null)} className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4 backdrop-blur-sm">
+          {/* Close button */}
           <button type="button" onClick={() => setPreview(null)} aria-label="Close full-screen image" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-slate-900 text-white"><X className="h-5 w-5" /></button>
+          {/* Download + Delete — visible on all screen sizes in the preview */}
+          <div className="absolute bottom-[max(1.25rem,env(safe-area-inset-bottom))] left-1/2 z-10 flex -translate-x-1/2 gap-3" onClick={(e) => e.stopPropagation()}>
+            <a
+              href={`/api/tryons/${encodeURIComponent(preview.id)}/download`}
+              aria-label={`Download ${preview.garment_type} try-on`}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-slate-900/90 text-white backdrop-blur transition hover:bg-indigo-600"
+            >
+              <Download className="h-4 w-4" />
+            </a>
+            <button
+              type="button"
+              onClick={() => { setDeleteTarget(preview); setPreview(null); }}
+              aria-label={`Delete ${preview.garment_type} try-on`}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-slate-900/90 text-white backdrop-blur transition hover:bg-rose-600"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
           <Image
             src={preview.imageUrl}
             alt={`${preview.garment_type} try-on full screen`}
@@ -277,7 +296,7 @@ export default function LibraryGallery({
               setFailedImageIds((current) => new Set(current).add(preview.id));
               setPreview(null);
             }}
-            className="cursor-zoom-out object-contain p-4 sm:p-10"
+            className="cursor-zoom-out object-contain p-4 pb-20 sm:p-10"
           />
         </div>
       )}
