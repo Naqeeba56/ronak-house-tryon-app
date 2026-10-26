@@ -142,7 +142,7 @@ html[data-theme="light"] .thread-loader__progress {
   z-index: 2;
   display: grid;
   width: 63%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1415 / 1111;
   place-items: center;
   animation: thread-logo-float 2.8s ease-in-out infinite;
   backface-visibility: hidden;
