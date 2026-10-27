@@ -69,7 +69,7 @@ function Plan({ planId, highlighted = false }: {
 				<li className="flex items-start gap-2 sm:gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /><span>{plan.tryonCount} AI try-on generations</span></li>
 				<li className="flex items-start gap-2 sm:gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /><span>Account-only Library access</span></li>
 				<li className="flex items-start gap-2 sm:gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /><span>Saved results retained for up to 30 days</span></li>
-				<li className="flex items-start gap-2 sm:gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /><span>Studio model and fabric-reference workflow</span></li>
+				<li className="flex items-start gap-2 sm:gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /><span>Unused try-ons carry forward to your next top-up</span></li>
 			</ul>
 			<div className="mt-auto pt-4 sm:pt-8">
 				<TryOnPackPurchaseButton planId={planId} buttonLabel={details.buttonLabel} />

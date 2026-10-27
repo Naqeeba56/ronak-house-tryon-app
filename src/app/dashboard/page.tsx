@@ -74,7 +74,7 @@ export default async function DashboardPage() {
       recentUsers = [...recentUsers, ...pageUsers.map((account) => ({
         id: account.id,
         email: account.email ?? "No email",
-        name: String(account.user_metadata?.full_name ?? account.user_metadata?.name ?? "FabricFit member"),
+        name: String(account.user_metadata?.full_name ?? account.user_metadata?.name ?? "VTONLabs member"),
         createdAt: account.created_at,
       }))]
         .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))

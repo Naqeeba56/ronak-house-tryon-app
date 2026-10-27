@@ -65,7 +65,7 @@ export default function Footer() {
             <div className="mt-4 grid gap-3 text-sm">
               <Link href="/profile" onClick={requireAuth} className="transition hover:text-white">Profile &amp; billing</Link>
               {!user && <button type="button" onClick={() => setIsAuthOpen(true)} className="text-left transition hover:text-white">Sign in</button>}
-              <a href="mailto:support@ronakhouse.com?subject=VTON%20Labs%20Support" target="_blank" rel="noopener noreferrer" className="transition hover:text-white">Contact support</a>
+              <a href="mailto:mohammadtalish03@gmail.com?subject=VTONLabs%20Support" target="_blank" rel="noopener noreferrer" className="transition hover:text-white">Contact support</a>
             </div>
           </div>
           <div className="border-t border-slate-800 pt-5 md:border-l md:border-t-0 md:pl-6 md:pt-0">

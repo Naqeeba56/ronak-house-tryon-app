@@ -154,7 +154,7 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
               {avatarUrl ? <Image src={avatarUrl} alt={`${fullName} profile`} width={64} height={64} unoptimized className="h-full w-full rounded-2xl object-cover" /> : initials || <User className="h-6 w-6" />}
             </div>
             <div className="min-w-0">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-indigo-300"><BadgeCheck className="h-3.5 w-3.5" /> FabricFit member</span>
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-indigo-300"><BadgeCheck className="h-3.5 w-3.5" /> VTONLabs member</span>
               <h2 className="mt-1 truncate text-xl font-semibold text-white">{fullName}</h2>
               <p className="mt-1 flex items-center gap-1.5 truncate text-sm text-slate-400"><Mail className="h-3.5 w-3.5 shrink-0" /> {email}</p>
             </div>
@@ -284,7 +284,7 @@ export default function ProfileExperience({ initialProfile }: { initialProfile: 
     <Dialog open={showSignOutConfirm} onOpenChange={(open) => { if (!isSigningOut) setShowSignOutConfirm(open); }}>
       <DialogContent showCloseButton={!isSigningOut} className="max-w-sm border-slate-800 bg-slate-900 text-slate-100">
         <DialogHeader>
-          <DialogTitle className="text-white">Sign out of FabricFit?</DialogTitle>
+          <DialogTitle className="text-white">Sign out of VTONLabs?</DialogTitle>
           <DialogDescription className="text-slate-400">
             You&apos;ll need to sign back in to access your library and generate new looks.
           </DialogDescription>

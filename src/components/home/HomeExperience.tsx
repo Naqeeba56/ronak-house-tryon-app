@@ -27,8 +27,8 @@ type Gender = "male" | "female";
 
 const steps = [
   {
-    title: "Pick a model",
-    text: "Choose a studio model or upload your photo.",
+    title: "Upload your photos",
+    text: "Add your person photo and a fabric image — both are needed to generate your try-on.",
   },
   {
     title: "Choose a style",

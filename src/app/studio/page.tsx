@@ -35,7 +35,7 @@ type GenerateResponse = {
 
 type TryOnBalance = { freeRemaining: number; packRemaining: number; unlimited?: boolean };
 
-const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024; // kept for camera auto-compress only
 
 async function fetchTryOnBalance(): Promise<TryOnBalance> {
   const response = await fetch("/api/tryon-credits", { cache: "no-store" });
@@ -58,9 +58,6 @@ function readImage(file: Blob): Promise<string> {
 async function readUploadedImage(file: File): Promise<UploadedImage> {
   if (!file.type.startsWith("image/")) {
     throw new Error("Choose an image file (PNG, JPG, WebP, or HEIC).");
-  }
-  if (file.size > MAX_IMAGE_BYTES) {
-    throw new Error("Images must be 1.5 MB or smaller.");
   }
   return { name: file.name, dataUrl: await readImage(file) };
 }
@@ -162,7 +159,7 @@ function PhotoUploadCard({
           </div>
         </div>
       )}
-      <span className="mt-2 text-[11px] text-slate-500">PNG, JPG, WebP or HEIC · up to 1.5 MB</span>
+      <span className="mt-2 text-[11px] text-slate-500">PNG, JPG, WebP or HEIC supported</span>
       <input ref={inputRef} type="file" accept="image/*" aria-label={`Upload ${title}`} className="sr-only" onChange={onChange} />
     </div>
   );
@@ -456,7 +453,7 @@ export default function StudioPage() {
     } catch (uploadError) {
       const message = uploadError instanceof Error ? uploadError.message : "";
       setError(
-        message === "Choose a PNG, JPG, or WebP image." || message === "Images must be 1.5 MB or smaller."
+        message === "Choose an image file (PNG, JPG, WebP, or HEIC)."
           ? message
           : "Could not read this image. Choose a PNG, JPG, or WebP file and try again.",
       );
